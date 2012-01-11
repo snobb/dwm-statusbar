@@ -1,20 +1,18 @@
 TARGET = statusbar
-SRC = $(wildcard *.c)
+SRC = ${wildcard *.c}
 OBJ = ${SRC:.c=.o}
-HDR = $(wildcard *.h)
+HDR = ${wildcard *.h}
 CC = cc
 CFLAGS = -Wall -std=c99 -pedantic -O2
 LFLAGS = -lX11
 STRIP = strip
 INSTALL = install
-INSTALL_ARGS = -o root -g wheel -m 755  # Installs with SUID set
+INSTALL_ARGS = -o root -g wheel -m 755 
 INSTALL_DIR = /usr/local/bin/
 
 # autoconfiguration
 BATPATH=`find /sys -name BAT0 -print0 -quit`
 LNKPATH=`find /sys -name link -print0 -quit`
-
--include .depend
 
 all: debug
 
@@ -39,7 +37,7 @@ build_host.h:
 	@echo "#define LNK_PATH \"${LNKPATH}\"" >> build_host.h
 
 install: release
-	$(INSTALL) $(INSTALL_ARGS) $(TARGET) $(INSTALL_DIR)
+	${INSTALL} ${INSTALL_ARGS} ${TARGET} ${INSTALL_DIR}
 	@echo "DONE"
 
 ${TARGET}: build_host.h ${OBJ}
@@ -49,4 +47,4 @@ clean:
 	-rm -f build_host.h 
 	-rm -f *.o ${TARGET} 
 
-.PHONY : all debug release build run clean 
+.PHONY : all debug release build install clean 
