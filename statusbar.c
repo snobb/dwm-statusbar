@@ -4,7 +4,6 @@
 #include "build_host.h"
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <stdarg.h>
 #include <unistd.h>
 #include <time.h>
@@ -16,7 +15,6 @@
 #define LABUF     15
 #define LAPATH    "/proc/loadavg"
 
-#define INTBUF    10
 #define DTBUF     20
 #define FULLSTR   60
 
@@ -25,7 +23,8 @@ void set_status(char *str);
 void get_load_avg(char *buf);
 float get_battery(void);
 void get_datetime(char *buf);
-unsigned int get_wifi(void);
+int get_wifi(void);
+int read_int(const char *path);
 void read_str(const char *path, char *buf, size_t sz); 
 
 static Display *dpy;
@@ -83,12 +82,12 @@ get_load_avg(char *buf) {
 
 float
 get_battery(void) {
-  char now[INTBUF] = "\0";
-  char full[INTBUF] = "\0";
+  int now, full;
+
+  now = read_int(BAT_NOW);
+  full = read_int(BAT_FULL);
   
-  read_str(BAT_NOW, now, INTBUF);
-  read_str(BAT_FULL, full, INTBUF);
-  return (atoi(now) / atoi(full)) * 100;
+  return (now / full) * 100;
 }
 
 void
@@ -100,12 +99,28 @@ get_datetime(char *buf) {
   buf[DTBUF-1] = '\0';
 }
 
-unsigned int
+int
 get_wifi(void) {
-  char wifi[INTBUF] = "\0";
-  
-  read_str(LNK_PATH, wifi, INTBUF);
-  return atoi(wifi);
+  int wifi = read_int(LNK_PATH);
+  return wifi;
+}
+
+int
+read_int(const char *path) {
+  FILE *fh;
+  int i = 0;
+
+  fh = fopen(path, "r");
+  if (fh == NULL) {
+    xerror("Cannot open %s for reading.\n", path);
+    return -1;
+  }
+  if (fscanf(fh, "%d", &i) < 0) {
+    xerror("Cannot read from %s\n", path);
+  }
+
+  fclose(fh);
+  return i;
 }
 
 void
