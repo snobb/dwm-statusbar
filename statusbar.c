@@ -87,7 +87,7 @@ get_battery(void) {
   now = read_int(BAT_NOW);
   full = read_int(BAT_FULL);
   
-  return (now / full) * 100;
+  return (now * 100) / full;
 }
 
 void
