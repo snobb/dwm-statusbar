@@ -13,6 +13,7 @@ INSTALL_DIR = /usr/local/bin/
 # autoconfiguration
 BATPATH=`find /sys -name BAT0 -print0 -quit`
 LNKPATH=`find /sys -name link -print0 -quit`
+LAPATH=`find /proc -name loadavg -print0 -quit`
 
 all: debug
 
@@ -32,6 +33,7 @@ build_host.h:
 	@echo "#define BUILD_OS \"`uname`\""          >> build_host.h
 	@echo "#define BUILD_PLATFORM \"`uname -m`\"" >> build_host.h
 	@echo "#define BUILD_KERNEL \"`uname -r`\""   >> build_host.h
+	@echo "#define LA_PATH \"${LAPATH}\""  >> build_host.h
 	@echo "#define BAT_NOW \"${BATPATH}/charge_now\""  >> build_host.h
 	@echo "#define BAT_FULL \"${BATPATH}/charge_full\""  >> build_host.h
 	@echo "#define LNK_PATH \"${LNKPATH}\"" >> build_host.h
