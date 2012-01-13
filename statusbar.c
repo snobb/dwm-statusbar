@@ -13,10 +13,8 @@
 #define ERR_PREFIX  "!!ERROR: "
 
 #define LABUF     15
-#define LAPATH    "/proc/loadavg"
-
 #define DTBUF     20
-#define FULLSTR   60
+#define FULLSTR   52
 
 void xerror(const char *msg, ...);
 void set_status(char *str);
@@ -77,7 +75,7 @@ xerror(const char *msg, ...) {
 
 void
 get_load_avg(char *buf) {
-  read_str(LAPATH, buf, LABUF);
+  read_str(LA_PATH, buf, LABUF);
 }
 
 float
@@ -141,10 +139,7 @@ read_str(const char *path, char *buf, size_t sz) {
   }
   fclose(fh);
 
-  if (rcv < sz) 
-    buf[rcv-1] = '\0';
-  else
-    buf[sz-1] = '\0';
+  buf[rcv-1] = '\0';
 }
 
 /*  EOF  */
