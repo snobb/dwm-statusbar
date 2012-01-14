@@ -3,7 +3,7 @@ SRC = ${wildcard *.c}
 OBJ = ${SRC:.c=.o}
 HDR = ${wildcard *.h}
 CC = cc
-CFLAGS = -Wall -std=c99 -pedantic -O2
+CFLAGS = -Wall -std=c99 -pedantic
 LFLAGS = -lX11
 STRIP = strip
 INSTALL = install
@@ -17,7 +17,7 @@ LAPATH=`find /proc -name loadavg -print0 -quit`
 
 all: debug
 
-debug: CFLAGS += -g -DDEBUG
+debug: CFLAGS += -g -O2 -DDEBUG
 debug: LFLAGS += -g
 debug: build
 
