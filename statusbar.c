@@ -5,20 +5,24 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
 #include <unistd.h>
 #include <time.h>
 #include <signal.h>
 #include <X11/Xlib.h>
 
-
+#ifdef DEBUG
+#include <stdarg.h>
 #define ERR_PREFIX  "!!ERROR: "
+#endif
 
 #define LABUF     15
 #define DTBUF     20
 #define STR       60
 
+#ifdef DEBUG
 void xerror(const char *msg, ...);
+#endif
+
 void set_status(char *str);
 void open_display(void);
 void close_display();
@@ -67,7 +71,9 @@ void
 open_display(void)
 {
   if (!(dpy = XOpenDisplay(NULL))) {
+#ifdef DEBUG
     xerror("Cannot open display.\n");
+#endif
     exit(1);
   }
   signal(SIGINT, close_display);
@@ -78,10 +84,13 @@ void
 close_display()
 {
   XCloseDisplay(dpy);
+#ifdef DEBUG
   fputs("statusbar: exiting...\n", stderr);
+#endif
   exit(0);
 }
 
+#ifdef DEBUG
 void
 xerror(const char *msg, ...)
 {
@@ -93,6 +102,7 @@ xerror(const char *msg, ...)
   vfprintf(stderr, msg, ap);
   va_end(ap);
 }
+#endif
 
 void
 get_load_avg(char *buf)
@@ -135,12 +145,16 @@ read_int(const char *path)
 
   fh = fopen(path, "r");
   if (fh == NULL) {
+#ifdef DEBUG
     xerror("Cannot open %s for reading.\n", path);
+#endif
     return -1;
   }
   
   if (fscanf(fh, "%d", &i) < 0) {
+#ifdef DEBUG
     xerror("Cannot read from %s\n", path);
+#endif
   }
   
   fclose(fh);
@@ -154,12 +168,16 @@ read_str(const char *path, char *buf, size_t sz)
 
   fh = fopen(path, "r");
   if (fh == NULL) {
+#ifdef DEBUG
     xerror("Cannot open %s for reading.\n", path);
+#endif
     return;
   }
   
   if (fgets(buf, sz, fh) == NULL) {
+#ifdef DEBUG
     xerror("Cannot read from %s.\n", path);
+#endif
   }
   
   fclose(fh);
