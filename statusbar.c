@@ -27,10 +27,10 @@ int
 main(void)
 {
   float bat;                /* battery status */
-  int lnk;                  /* wifi link      */
-  char la[LABUF] = "\0";    /* load average   */
-  char dt[DTBUF] = "\0";    /* date/time      */
-  char stat[STR] = "\0";    /* full string    */
+  int   lnk;                /* wifi link      */
+  char  la[LABUF] = "\0";   /* load average   */
+  char  dt[DTBUF] = "\0";   /* date/time      */
+  char  stat[STR] = "\0";   /* full string    */
 
   open_display();
 
@@ -38,8 +38,8 @@ main(void)
     read_str(LA_PATH, la, LABUF);           /* Load average */
     lnk = read_int(LNK_PATH);               /* link status */
     get_datetime(dt);                       /* date/time */
-    bat = (read_int(BAT_NOW) / 100) / 
-              read_int(BAT_FULL);           /* battery */
+    bat = ((float)read_int(BAT_NOW) / 
+           read_int(BAT_FULL)) * 100.0f;    /* battery */
   
     snprintf(stat, STR, "%s | %d | %0.1f%% | %s", la, lnk, bat, dt);
     set_status(stat);
