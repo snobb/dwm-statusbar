@@ -2,13 +2,17 @@ TARGET = statusbar
 SRC = ${wildcard *.c}
 OBJ = ${SRC:.c=.o}
 HDR = ${wildcard *.h}
-CC = cc
-CFLAGS = -Wall -std=c99 -pedantic
+CC ?= cc
+CFLAGS = -Wall
 LFLAGS = -lX11
 STRIP = strip
 INSTALL = install
 INSTALL_ARGS = -o root -g wheel -m 755 
 INSTALL_DIR = /usr/local/bin/
+
+ifeq (${CC}, cc)
+CFLAGS += -std=c99 -pedantic
+endif
 
 # autoconfiguration
 BATPATH=`find /sys -name BAT0 -print0 -quit`
@@ -17,7 +21,7 @@ LAPATH=`find /proc -name loadavg -print0 -quit`
 
 all: debug
 
-debug: CFLAGS += -g -O2 -DDEBUG
+debug: CFLAGS += -g -DDEBUG
 debug: LFLAGS += -g
 debug: build
 
