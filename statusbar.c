@@ -41,7 +41,7 @@ main(void)
     bat = ((float)read_int(BAT_NOW) / 
            read_int(BAT_FULL)) * 100.0f;    /* battery */
   
-    snprintf(stat, STR, "%s | %d | %0.1f%% | %s", la, lnk, bat, dt);
+    snprintf(stat, STR, "%s | %d | %0.1f%% | %s", la, lnk, (bat > 100) ? 100 : bat, dt);
     set_status(stat);
   }
 
