@@ -10,10 +10,17 @@
 #include <signal.h>
 #include <X11/Xlib.h>
 
+/* version 0.5 */
+
+#define THRESHOLD 15
+#define TIMEOUT   5
+#define SUSPEND   { BOX_SUSPEND, NULL }			/* BOX_SUSPEND gets configured in Makefile */
+
 #define LABUF     15
 #define DTBUF     20
 #define STR       60
 
+void spawn(const char **params);
 void set_status(char *str);
 void open_display(void);
 void close_display();
@@ -43,12 +50,18 @@ main(void)
     bat = ((float)read_int(BAT_NOW) / 
            read_int(BAT_FULL)) * 100.0f;    /* battery */
 
-    snprintf(stat, STR, "%s | %d | %0.1f%% | %s", la, lnk, (bat > 100) ? 100 : bat, dt);
-#ifndef DEBUG
-    set_status(stat);
-#else
-    puts(stat);
+    if (bat > THRESHOLD) {
+      snprintf(stat, STR, "%s | %d | %0.1f%% | %s", la, lnk, (bat > 100) ? 100 : bat, dt);
+      set_status(stat);
+    } else {
+      snprintf(stat, STR, "LOW BATTERY: suspending after %d ", TIMEOUT);
+      set_status(stat);
+      sleep(5);
+      spawn((const char*[])SUSPEND);
+#ifdef DEBUG
+      exit(0);
 #endif
+    }
   }
 
 #ifndef DEBUG
@@ -58,10 +71,23 @@ main(void)
 }
 
 void
+spawn(const char **params) {
+  if (fork() == 0) {
+    setsid();
+    execv(params[0], (char**)params);
+    exit(0);
+  }
+}
+
+void
 set_status(char *str)
 {
+#ifndef DEBUG
   XStoreName(dpy, DefaultRootWindow(dpy), str);
   XSync(dpy, False);
+#else
+  puts(str);
+#endif
 }
 
 void

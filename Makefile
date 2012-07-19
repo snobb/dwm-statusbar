@@ -18,6 +18,7 @@ endif
 BATPATH=`find /sys -name BAT0 -print0 -quit`
 LNKPATH=`find /sys -name link -print0 -quit`
 LAPATH=`find /proc -name loadavg -print0 -quit`
+BOXSUSPEND=`which boxsuspend`
 
 all: debug
 
@@ -41,6 +42,7 @@ build_host.h:
 	@echo "#define BAT_NOW \"${BATPATH}/charge_now\""  >> build_host.h
 	@echo "#define BAT_FULL \"${BATPATH}/charge_full\""  >> build_host.h
 	@echo "#define LNK_PATH \"${LNKPATH}\"" >> build_host.h
+	@echo "#define BOX_SUSPEND \"${BOXSUSPEND}\"" >> build_host.h
 
 install: release
 	${INSTALL} ${INSTALL_ARGS} ${TARGET} ${INSTALL_DIR}
