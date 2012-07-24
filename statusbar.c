@@ -11,20 +11,9 @@
 #include <signal.h>
 #include <X11/Xlib.h>
 
-/* version 0.61 */
+/* version 0.62 */
 
-/* Available statuses 
- *  
- *  Charging
- *  Discharging
- *  Full
- *  Unknown
- */
-#define CHARGE      "Charging"
-#define DISCHARGE   "Discharging"
-#define FULL        "Full"
-
-#define THRESHOLD 10
+#define THRESHOLD 8
 #define TIMEOUT   40
 #define SUSPEND   { BOX_SUSPEND, NULL }     /* BOX_SUSPEND gets configured in Makefile */
 
@@ -32,7 +21,14 @@
 #define DTBUF     20
 #define STR       60
 
-/* Charging, Discharging, Unknown, Full (order matters) */
+
+/* Available statuses 
+ *  
+ *  Charging
+ *  Discharging
+ *  Unknown
+ *  Full
+ */
 typedef enum { 
   C, D, U, F
 } status_t;
@@ -145,17 +141,17 @@ get_datetime(char *buf)
 status_t
 get_status()
 {
-  char stat[50] = {0};
-  read_str(BAT_STAT, stat, 50);
+  char st[3] = { 0 };
+  read_str(BAT_STAT, st, 2);
 
-  if (strncmp(stat, CHARGE, strlen(CHARGE)) == 0)
+  if (st[0] == 'C')      /* Charging */
     return C;
-  else if (strncmp(stat, DISCHARGE, strlen(DISCHARGE)) == 0)
+  else if (st[0] == 'D') /* Discharging */
     return D;
-  else if (strncmp(stat, FULL, strlen(FULL)) == 0)
+  else if (st[0] == 'F') /* Full */
     return F;
   else
-    return U;
+    return U;            /* Unknown */
 }
 
 int
