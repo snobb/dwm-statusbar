@@ -76,11 +76,11 @@ main(void)
     if (st == D && bat < THRESHOLD) {
       snprintf(stat, STR, "LOW BATTERY: suspending after %d ", TIMEOUT - timer);
       set_status(stat);
-      if (timer > TIMEOUT) {
+      if (timer >= TIMEOUT) {
 #ifndef DEBUG
-          spawn((const char*[])SUSPEND);
+        spawn((const char*[])SUSPEND);
 #else
-          puts("sleeping");
+        puts("sleeping");
 #endif
         timer = 0;
       } else
