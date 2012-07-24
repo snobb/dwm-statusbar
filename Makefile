@@ -41,6 +41,7 @@ build_host.h:
 	@echo "#define LA_PATH \"${LAPATH}\""  >> build_host.h
 	@echo "#define BAT_NOW \"${BATPATH}/charge_now\""  >> build_host.h
 	@echo "#define BAT_FULL \"${BATPATH}/charge_full\""  >> build_host.h
+	@echo "#define BAT_STAT \"${BATPATH}/status\""  >> build_host.h
 	@echo "#define LNK_PATH \"${LNKPATH}\"" >> build_host.h
 	@echo "#define BOX_SUSPEND \"${BOXSUSPEND}\"" >> build_host.h
 
