@@ -11,7 +11,7 @@
 #include <signal.h>
 #include <X11/Xlib.h>
 
-/* version 0.6 */
+/* version 0.61 */
 
 /* Available statuses 
  *  
@@ -25,14 +25,14 @@
 #define FULL        "Full"
 
 #define THRESHOLD 10
-#define TIMEOUT   5
+#define TIMEOUT   40
 #define SUSPEND   { BOX_SUSPEND, NULL }     /* BOX_SUSPEND gets configured in Makefile */
 
 #define LABUF     15
 #define DTBUF     20
 #define STR       60
 
-/* Charging, Discharging, Uknown, Full (order matters) */
+/* Charging, Discharging, Unknown, Full (order matters) */
 typedef enum { 
   C, D, U, F
 } status_t;
@@ -52,6 +52,7 @@ static Display *dpy;
 int
 main(void)
 {
+  int   timer = 0;
   float bat;                /* battery status */
   int   lnk;                /* wifi link      */
   char  la[LABUF] = { 0 };  /* load average   */
@@ -65,25 +66,29 @@ main(void)
 #endif
 
   while (!sleep(1)) {
-    read_str(LA_PATH, la, LABUF);           /* Load average */
+    read_str(LA_PATH, la, LABUF);           /* load average */
     lnk = read_int(LNK_PATH);               /* link status */
     get_datetime(dt);                       /* date/time */
     bat = ((float)read_int(BAT_NOW) / 
            read_int(BAT_FULL)) * 100.0f;    /* battery */
-    st = get_status();
+    st = get_status();                      /* battery status (charging/discharging/full/etc) */
 
     if (st == D && bat < THRESHOLD) {
-      snprintf(stat, STR, "LOW BATTERY: suspending after %d ", TIMEOUT);
+      snprintf(stat, STR, "LOW BATTERY: suspending after %d ", TIMEOUT - timer);
       set_status(stat);
-      sleep(TIMEOUT);
+      if (timer > TIMEOUT) {
 #ifndef DEBUG
-      spawn((const char*[])SUSPEND);
+          spawn((const char*[])SUSPEND);
 #else
-      exit(0);
+          puts("sleeping");
 #endif
+        timer = 0;
+      } else
+        timer++;
     } else {
       snprintf(stat, STR, "%s | %d | %c%0.1f%% | %s", la, lnk, status[st], (bat > 100) ? 100 : bat, dt);
       set_status(stat);
+      timer = 0;  /* reseting the standby timer */
     }
   }
 
