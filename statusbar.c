@@ -24,7 +24,7 @@
 #define DISCHARGE   "Discharging"
 #define FULL        "Full"
 
-#define THRESHOLD 15
+#define THRESHOLD 10
 #define TIMEOUT   5
 #define SUSPEND   { BOX_SUSPEND, NULL }     /* BOX_SUSPEND gets configured in Makefile */
 
@@ -54,9 +54,9 @@ main(void)
 {
   float bat;                /* battery status */
   int   lnk;                /* wifi link      */
-  char  la[LABUF] = "\0";   /* load average   */
-  char  dt[DTBUF] = "\0";   /* date/time      */
-  char  stat[STR] = "\0";   /* full string    */
+  char  la[LABUF] = { 0 };  /* load average   */
+  char  dt[DTBUF] = { 0 };  /* date/time      */
+  char  stat[STR] = { 0 };  /* full string    */
   status_t st;              /* battery status */
   char  status[] = { '+', '-', '?', '=' };  /* should be the same order as the enum above (C, D, U, F) */
 
@@ -75,7 +75,7 @@ main(void)
     if (st == D && bat < THRESHOLD) {
       snprintf(stat, STR, "LOW BATTERY: suspending after %d ", TIMEOUT);
       set_status(stat);
-      sleep(5);
+      sleep(TIMEOUT);
 #ifndef DEBUG
       spawn((const char*[])SUSPEND);
 #else
