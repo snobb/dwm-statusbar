@@ -141,17 +141,21 @@ get_datetime(char *buf)
 status_t
 get_status()
 {
-  char st[3] = { 0 };
-  read_str(BAT_STAT, st, 2);
+  FILE *bs; 
+  char st;
+  
+  if ((bs = fopen(BAT_STAT, "r")) == NULL)
+    return U;
+  
+  st = fgetc(bs);
+  fclose(bs);
 
-  if (st[0] == 'C')      /* Charging */
-    return C;
-  else if (st[0] == 'D') /* Discharging */
-    return D;
-  else if (st[0] == 'F') /* Full */
-    return F;
-  else
-    return U;            /* Unknown */
+  switch(st) {
+    case 'C': return C;     /* Charging */
+    case 'D': return D;     /* Discharging */
+    case 'F': return F;     /* Full */
+    default: return U;      /* Unknown */
+  }
 }
 
 int
