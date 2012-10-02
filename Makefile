@@ -5,7 +5,6 @@ HDR = ${wildcard *.h}
 CC ?= cc
 CFLAGS = -Wall
 LFLAGS = -lX11
-STRIP = strip
 INSTALL = install
 INSTALL_ARGS = -o root -g wheel -m 755 
 INSTALL_DIR = /usr/local/bin/
@@ -29,7 +28,6 @@ debug: build
 release: CFLAGS += -Os
 release: LFLAGS += -s
 release: clean build
-	${STRIP} ${TARGET}
 
 build: build_host.h ${TARGET}
 
@@ -51,6 +49,9 @@ install: release
 
 ${TARGET}: build_host.h ${OBJ}
 	${CC} ${LFLAGS} -o $@ ${OBJ}	
+
+%.o : %.c
+	${CC} ${CFLAGS} -c $?
 
 clean:
 	-rm -f build_host.h 
