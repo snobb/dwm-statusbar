@@ -2,20 +2,21 @@ TARGET = statusbar
 SRC = ${wildcard *.c}
 OBJ = ${SRC:.c=.o}
 HDR = ${wildcard *.h}
-CC ?= cc
+CC = clang
 CFLAGS = -Wall
 LFLAGS = -lX11
 INSTALL = install
 INSTALL_ARGS = -o root -g wheel -m 755 
 INSTALL_DIR = /usr/local/bin/
 
-ifeq (${CC}, cc)
+ifeq (${CC}, $(filter ${CC}, cc gcc clang))
 CFLAGS += -std=c99 -pedantic
 endif
 
 # autoconfiguration
 BATPATH=`find /sys -name BAT0 -print0 -quit`
-LNKPATH=`find /sys -name link -print0 -quit`
+#LNKPATH=`find /sys -name link -print0 -quit`
+LNKPATH=`find /sys/class/net/wlan0/ -name operstate -print0 -quit`
 LAPATH=`find /proc -name loadavg -print0 -quit`
 BOXSUSPEND=`which boxsuspend`
 
