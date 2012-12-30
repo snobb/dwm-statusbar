@@ -11,7 +11,7 @@
 #include <signal.h>
 #include <X11/Xlib.h>
 
-/* version 0.62 */
+/* version 0.63 */
 
 #define THRESHOLD 8
 #define TIMEOUT   40
@@ -19,17 +19,18 @@
 
 #define LABUF     15
 #define DTBUF     20
-#define STR       60
+#define LNKBUF    8
+#define STR       64
 
 
 /* Available statuses 
- *  
+ *
  *  Charging
  *  Discharging
  *  Unknown
  *  Full
  */
-typedef enum { 
+typedef enum {
   C, D, U, F
 } status_t;
 
@@ -50,9 +51,9 @@ main(void)
 {
   int   timer = 0;
   float bat;                /* battery status */
-  int   lnk;                /* wifi link      */
-  char  la[LABUF] = { 0 };  /* load average   */
-  char  dt[DTBUF] = { 0 };  /* date/time      */
+  char  lnk[STR] = { 0 };   /* wifi link      */
+  char  la[STR] = { 0 };    /* load average   */
+  char  dt[STR] = { 0 };    /* date/time      */
   char  stat[STR] = { 0 };  /* full string    */
   status_t st;              /* battery status */
   char  status[] = { '+', '-', '?', '=' };  /* should be the same order as the enum above (C, D, U, F) */
@@ -63,9 +64,9 @@ main(void)
 
   while (!sleep(1)) {
     read_str(LA_PATH, la, LABUF);           /* load average */
-    lnk = read_int(LNK_PATH);               /* link status */
+    read_str(LNK_PATH, lnk, LNKBUF);        /* link status */
     get_datetime(dt);                       /* date/time */
-    bat = ((float)read_int(BAT_NOW) / 
+    bat = ((float)read_int(BAT_NOW) /
            read_int(BAT_FULL)) * 100.0f;    /* battery */
     st = get_status();                      /* battery status (charging/discharging/full/etc) */
 
@@ -82,7 +83,7 @@ main(void)
       } else
         timer++;
     } else {
-      snprintf(stat, STR, "%s | %d | %c%0.1f%% | %s", la, lnk, status[st], (bat > 100) ? 100 : bat, dt);
+      snprintf(stat, STR, "%s| %s | %c%0.1f%% | %s", la, lnk, status[st], (bat > 100) ? 100 : bat, dt);
       set_status(stat);
       timer = 0;  /* reseting the standby timer */
     }
@@ -141,12 +142,12 @@ get_datetime(char *buf)
 status_t
 get_status()
 {
-  FILE *bs; 
+  FILE *bs;
   char st;
-  
+
   if ((bs = fopen(BAT_STAT, "r")) == NULL)
     return U;
-  
+
   st = fgetc(bs);
   fclose(bs);
 
@@ -154,7 +155,7 @@ get_status()
     case 'C': return C;     /* Charging */
     case 'D': return D;     /* Discharging */
     case 'F': return F;     /* Full */
-    default: return U;      /* Unknown */
+    default : return U;     /* Unknown */
   }
 }
 
@@ -176,11 +177,16 @@ void
 read_str(const char *path, char *buf, size_t sz)
 {
   FILE *fh;
+  char ch = 0;
+  int idx = 0;
 
-  if (!(fh = fopen(path, "r")))
-    return;
+  if (!(fh = fopen(path, "r"))) return;
 
-  fgets(buf, sz, fh);
+  while ((ch = fgetc(fh)) != EOF && ch != '\0' && ch != '\n' && idx < sz) {
+    buf[idx++] = ch;
+  }
+
+  buf[idx] = '\0';
   fclose(fh);
 }
 
