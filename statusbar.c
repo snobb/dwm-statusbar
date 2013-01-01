@@ -11,7 +11,7 @@
 #include <signal.h>
 #include <X11/Xlib.h>
 
-/* version 0.63 */
+/* version 0.64 */
 
 #define THRESHOLD 8
 #define TIMEOUT   40
@@ -21,7 +21,6 @@
 #define DTBUF     20
 #define LNKBUF    8
 #define STR       64
-
 
 /* Available statuses 
  *
@@ -35,14 +34,14 @@ typedef enum {
 } status_t;
 
 
-void spawn(const char **params);
-void set_status(char *str);
-void open_display(void);
-void close_display();
-void get_datetime(char *buf);
-status_t get_status();
-int read_int(const char *path);
-void read_str(const char *path, char *buf, size_t sz);
+static void spawn(const char **params)  __attribute__ ((unused));
+static void set_status(char *str);
+static void open_display(void)          __attribute__ ((unused));
+static void close_display()             __attribute__ ((unused));
+static void get_datetime(char *buf);
+static status_t get_status();
+static int read_int(const char *path);
+static void read_str(const char *path, char *buf, size_t sz);
 
 static Display *dpy;
 
@@ -95,7 +94,7 @@ main(void)
   return 0; 
 }
 
-void
+static void
 spawn(const char **params) {
   if (fork() == 0) {
     setsid();
@@ -104,7 +103,7 @@ spawn(const char **params) {
   }
 }
 
-void
+static void
 set_status(char *str)
 {
 #ifndef DEBUG
@@ -115,7 +114,7 @@ set_status(char *str)
 #endif
 }
 
-void
+static void
 open_display(void)
 {
   if (!(dpy = XOpenDisplay(NULL))) 
@@ -124,14 +123,14 @@ open_display(void)
   signal(SIGTERM, close_display);
 }
 
-void
+static void
 close_display()
 {
   XCloseDisplay(dpy);
   exit(0);
 }
 
-void
+static void
 get_datetime(char *buf)
 {
   time_t rawtime;
@@ -139,7 +138,7 @@ get_datetime(char *buf)
   snprintf(buf, DTBUF, "%s", ctime(&rawtime));
 }
 
-status_t
+static status_t
 get_status()
 {
   FILE *bs;
@@ -159,7 +158,7 @@ get_status()
   }
 }
 
-int
+static int
 read_int(const char *path)
 {
   int i = 0;
@@ -173,7 +172,7 @@ read_int(const char *path)
   return i;
 }
 
-void
+static void
 read_str(const char *path, char *buf, size_t sz)
 {
   FILE *fh;
