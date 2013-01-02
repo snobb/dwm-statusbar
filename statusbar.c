@@ -17,7 +17,7 @@
 #define TIMEOUT   40
 #define SUSPEND   { BOX_SUSPEND, NULL }     /* BOX_SUSPEND gets configured in Makefile */
 
-#define LABUF     15
+#define LABUF     14
 #define DTBUF     20
 #define LNKBUF    8
 #define STR       64
@@ -82,7 +82,7 @@ main(void)
       } else
         timer++;
     } else {
-      snprintf(stat, STR, "%s| %s | %c%0.1f%% | %s", la, lnk, status[st], (bat > 100) ? 100 : bat, dt);
+      snprintf(stat, STR, "%s | %s | %c%0.1f%% | %s", la, lnk, status[st], (bat > 100) ? 100 : bat, dt);
       set_status(stat);
       timer = 0;  /* reseting the standby timer */
     }
