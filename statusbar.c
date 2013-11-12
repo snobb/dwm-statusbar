@@ -15,7 +15,7 @@
 
 #define THRESHOLD 8
 #define TIMEOUT   40
-#define SUSPEND   { BOX_SUSPEND, NULL }     /* BOX_SUSPEND gets configured in Makefile */
+#define SUSPEND   { "/bin/sh", "/usr/local/bin/suspend.sh", NULL }     /* BOX_SUSPEND gets configured in Makefile */
 
 #define LABUF     14
 #define DTBUF     20
