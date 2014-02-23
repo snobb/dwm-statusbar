@@ -3,3 +3,5 @@ Super simple status bar for DWM (for linux).
 Gets autoconfigured during make.
 
 Modified for use with Debian an a Thinkpad T420s, rather than Arch. (smapi naming differences for functions&states)
+
+requires clang (sudo apt-get install clang -y)
