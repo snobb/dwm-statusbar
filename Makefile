@@ -6,7 +6,7 @@ CC = clang
 CFLAGS = -Wall
 LFLAGS = -lX11
 INSTALL = install
-INSTALL_ARGS = -o root -g wheel -m 755 
+INSTALL_ARGS = -o root -g sudo -m 755 
 INSTALL_DIR = /usr/local/bin/
 
 ifeq (${CC}, $(filter ${CC}, cc gcc clang))
