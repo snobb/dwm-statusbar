@@ -152,6 +152,7 @@ get_status()
 
   switch(st) {
     case 'c': return C;     /* Charging */
+    case 'i': return F;     /* Idle */
     case 'd': return D;     /* Discharging */
     case 'f': return F;     /* Full */
     default : return U;     /* Unknown */
