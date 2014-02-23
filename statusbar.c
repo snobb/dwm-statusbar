@@ -151,9 +151,9 @@ get_status()
   fclose(bs);
 
   switch(st) {
-    case 'C': return C;     /* Charging */
-    case 'D': return D;     /* Discharging */
-    case 'F': return F;     /* Full */
+    case 'c': return C;     /* Charging */
+    case 'd': return D;     /* Discharging */
+    case 'f': return F;     /* Full */
     default : return U;     /* Unknown */
   }
 }
