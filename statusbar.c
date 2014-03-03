@@ -9,13 +9,14 @@
 #include <string.h>
 #include <time.h>
 #include <signal.h>
+#include <ctype.h>
 #include <X11/Xlib.h>
 
-/* version 0.64 */
+/* version 0.65 */
 
 #define THRESHOLD 8
 #define TIMEOUT   40
-#define SUSPEND   { "/bin/sh", "/usr/local/bin/suspend.sh", NULL }     /* BOX_SUSPEND gets configured in Makefile */
+#define SUSPEND   { "/bin/sh", "/usr/local/bin/suspend.sh", NULL }
 
 #define LABUF     14
 #define DTBUF     20
@@ -150,10 +151,11 @@ get_status()
   st = fgetc(bs);
   fclose(bs);
 
-  switch(st) {
-    case 'C': return C;     /* Charging */
-    case 'D': return D;     /* Discharging */
-    case 'F': return F;     /* Full */
+  switch(tolower(st)) {
+    case 'c': return C;     /* Charging */
+    case 'd': return D;     /* Discharging */
+    case 'i':               /* Idle - fall through */
+    case 'f': return F;     /* Full */
     default : return U;     /* Unknown */
   }
 }
@@ -189,5 +191,5 @@ read_str(const char *path, char *buf, size_t sz)
   fclose(fh);
 }
 
-/*  EOF  */
+/* vim: ts=4 sts=8 sw=4 smarttab et si tw=80 ci cino+=t0(0:0 fo=crtocl list */
 
