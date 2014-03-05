@@ -2,7 +2,15 @@ TARGET = statusbar
 SRC = ${wildcard *.c}
 OBJ = ${SRC:.c=.o}
 HDR = ${wildcard *.h}
-CC = clang
+ERR = $(shell which clang >/dev/null; echo $$?)
+ifeq "$(ERR)" "0"
+    CC = clang
+else
+    CC = gcc
+endif
+
+all:
+	echo $(CC)
 CFLAGS = -Wall
 LFLAGS = -lX11
 INSTALL = install
