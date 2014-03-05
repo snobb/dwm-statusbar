@@ -45,9 +45,9 @@ build_host.h:
 	@echo "#define BUILD_PLATFORM \"`uname -m`\"" >> build_host.h
 	@echo "#define BUILD_KERNEL \"`uname -r`\""   >> build_host.h
 	@echo "#define LA_PATH \"${LAPATH}\""  >> build_host.h
-	@echo "#define BAT_NOW \"${BATPATH}/remaining_percent\""  >> build_host.h
-	@echo "#define BAT_FULL \"${BATPATH}/stop_charge_thresh\""  >> build_host.h
-	@echo "#define BAT_STAT \"${BATPATH}/state\""  >> build_host.h
+	@echo "#define BAT_NOW \"${BATPATH}/charge_now\""  >> build_host.h
+	@echo "#define BAT_FULL \"${BATPATH}/charge_full\""  >> build_host.h
+	@echo "#define BAT_STAT \"${BATPATH}/status\""  >> build_host.h
 	@echo "#define LNK_PATH \"${LNKPATH}\"" >> build_host.h
 
 install: release
