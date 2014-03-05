@@ -6,11 +6,7 @@ CC = clang
 CFLAGS = -Wall
 LFLAGS = -lX11
 INSTALL = install
-<<<<<<< HEAD
-INSTALL_ARGS = -o root -g sudo -m 755 
-=======
 INSTALL_ARGS = -o root -g root -m 755
->>>>>>> upstream/master
 INSTALL_DIR = /usr/local/bin/
 
 ifeq (${CC}, $(filter ${CC}, cc gcc clang))
