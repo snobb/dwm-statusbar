@@ -151,17 +151,10 @@ get_status()
   st = fgetc(bs);
   fclose(bs);
 
-<<<<<<< HEAD
-  switch(st) {
-    case 'c': return C;     /* Charging */
-    case 'i': return F;     /* Idle */
-    case 'd': return D;     /* Discharging */
-=======
   switch(tolower(st)) {
     case 'c': return C;     /* Charging */
     case 'd': return D;     /* Discharging */
     case 'i':               /* Idle - fall through */
->>>>>>> upstream/master
     case 'f': return F;     /* Full */
     default : return U;     /* Unknown */
   }
