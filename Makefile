@@ -2,8 +2,6 @@ TARGET = statusbar
 SRC = ${wildcard *.c}
 OBJ = ${SRC:.c=.o}
 HDR = ${wildcard *.h}
-
-## experiment
 ERR = $(shell which clang >/dev/null; echo $$?)
 ifeq "$(ERR)" "0"
     CC = clang
@@ -13,16 +11,11 @@ endif
 
 all:
 	echo $(CC)
-##end experiment
-
-#CC = clang
-
 CFLAGS = -Wall
 LFLAGS = -lX11
 INSTALL = install
 INSTALL_ARGS = -o root -g root -m 755
-INSTALL_DIR=/home/seg/Desktop/test
-#INSTALL_DIR = /usr/local/bin/
+INSTALL_DIR = /usr/local/bin/
 
 ifeq (${CC}, $(filter ${CC}, cc gcc clang))
 CFLAGS += -std=c99 -pedantic
