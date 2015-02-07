@@ -12,7 +12,9 @@
 #include <ctype.h>
 #include <X11/Xlib.h>
 
-/* version 0.65 */
+/* version 0.66 */
+
+#define MIN(a, b) ((a) > (b) ? (b) : (a))
 
 #define THRESHOLD 8
 #define TIMEOUT   40
@@ -56,7 +58,8 @@ main(void)
   char  dt[STR] = { 0 };    /* date/time      */
   char  stat[STR] = { 0 };  /* full string    */
   status_t st;              /* battery status */
-  char  status[] = { '+', '-', '?', '=' };  /* should be the same order as the enum above (C, D, U, F) */
+  /* should be the same order as the enum above (C, D, U, F) */
+  char  status[] = { '+', '-', '?', '=' };
 
 #ifndef DEBUG
   open_display();
@@ -68,10 +71,12 @@ main(void)
     get_datetime(dt);                       /* date/time */
     bat = ((float)read_int(BAT_NOW) /
            read_int(BAT_FULL)) * 100.0f;    /* battery */
-    st = get_status();                      /* battery status (charging/discharging/full/etc) */
+    /* battery status (charging/discharging/full/etc) */
+    st = get_status();
 
     if (st == D && bat < THRESHOLD) {
-      snprintf(stat, STR, "LOW BATTERY: suspending after %d ", TIMEOUT - timer);
+      snprintf(stat, STR, "LOW BATTERY: suspending after %d ",
+               TIMEOUT - timer);
       set_status(stat);
       if (timer >= TIMEOUT) {
 #ifndef DEBUG
@@ -83,7 +88,11 @@ main(void)
       } else
         timer++;
     } else {
-      snprintf(stat, STR, "%s | %s | %c%0.1f%% | %s", la, lnk, status[st], (bat > 100) ? 100 : bat, dt);
+      snprintf(stat, STR, "%s | %s | %c%0.1f%% | %s",
+               la,
+               lnk,
+               status[st],
+               MIN(bat, 100), dt);
       set_status(stat);
       timer = 0;  /* reseting the standby timer */
     }
@@ -183,7 +192,10 @@ read_str(const char *path, char *buf, size_t sz)
 
   if (!(fh = fopen(path, "r"))) return;
 
-  while ((ch = fgetc(fh)) != EOF && ch != '\0' && ch != '\n' && idx < sz) {
+  while ((ch = fgetc(fh)) != EOF &&
+         ch != '\0' &&
+         ch != '\n' &&
+         idx < sz) {
     buf[idx++] = ch;
   }
 
