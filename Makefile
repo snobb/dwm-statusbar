@@ -22,7 +22,7 @@ endif
 # autoconfiguration
 BATPATH=`find /sys -name BAT0 -print0 -quit`
 #LNKPATH=`find /sys -name link -print0 -quit`
-LNKPATH=`find /sys/class/net/wlp3s0/ -name operstate -print0 -quit`
+LNKPATH=`find /sys/class/net/wlan0/ -name operstate -print0 -quit`
 LAPATH=`find /proc -name loadavg -print0 -quit`
 
 all: debug
