@@ -25,7 +25,7 @@
 #define LNKBUF    8
 #define STR       64
 
-/* Available statuses 
+/* Available statuses
  *
  *  Charging
  *  Discharging
@@ -33,7 +33,7 @@
  *  Full
  */
 typedef enum {
-  C, D, U, F
+    C, D, U, F
 } status_t;
 
 
@@ -48,160 +48,150 @@ static void read_str(const char *path, char *buf, size_t sz);
 
 static Display *dpy;
 
-int
-main(void)
+int main(void)
 {
-  int   timer = 0;
-  float bat;                /* battery status */
-  char  lnk[STR] = { 0 };   /* wifi link      */
-  char  la[STR] = { 0 };    /* load average   */
-  char  dt[STR] = { 0 };    /* date/time      */
-  char  stat[STR] = { 0 };  /* full string    */
-  status_t st;              /* battery status */
-  /* should be the same order as the enum above (C, D, U, F) */
-  char  status[] = { '+', '-', '?', '=' };
+    int   timer = 0;
+    float bat;                /* battery status */
+    char  lnk[STR] = { 0 };   /* wifi link      */
+    char  la[STR] = { 0 };    /* load average   */
+    char  dt[STR] = { 0 };    /* date/time      */
+    char  stat[STR] = { 0 };  /* full string    */
+    status_t st;              /* battery status */
+    /* should be the same order as the enum above (C, D, U, F) */
+    char  status[] = { '+', '-', '?', '=' };
 
 #ifndef DEBUG
-  open_display();
+    open_display();
 #endif
 
-  while (!sleep(1)) {
-    read_str(LA_PATH, la, LABUF);           /* load average */
-    read_str(LNK_PATH, lnk, LNKBUF);        /* link status */
-    get_datetime(dt);                       /* date/time */
-    bat = ((float)read_int(BAT_NOW) /
-           read_int(BAT_FULL)) * 100.0f;    /* battery */
-    /* battery status (charging/discharging/full/etc) */
-    st = get_status();
+    while (!sleep(1)) {
+        read_str(LA_PATH, la, LABUF);           /* load average */
+        read_str(LNK_PATH, lnk, LNKBUF);        /* link status */
+        get_datetime(dt);                       /* date/time */
+        bat = ((float)read_int(BAT_NOW) /
+                read_int(BAT_FULL)) * 100.0f;    /* battery */
+        /* battery status (charging/discharging/full/etc) */
+        st = get_status();
 
-    if (st == D && bat < THRESHOLD) {
-      snprintf(stat, STR, "LOW BATTERY: suspending after %d ",
-               TIMEOUT - timer);
-      set_status(stat);
-      if (timer >= TIMEOUT) {
+        if (st == D && bat < THRESHOLD) {
+            snprintf(stat, STR, "LOW BATTERY: suspending after %d ",
+                    TIMEOUT - timer);
+            set_status(stat);
+            if (timer >= TIMEOUT) {
 #ifndef DEBUG
-        spawn((const char*[])SUSPEND);
+                spawn((const char*[])SUSPEND);
 #else
-        puts("sleeping");
+                puts("sleeping");
 #endif
-        timer = 0;
-      } else
-        timer++;
-    } else {
-      snprintf(stat, STR, "%s | %s | %c%0.1f%% | %s",
-               la,
-               lnk,
-               status[st],
-               MIN(bat, 100), dt);
-      set_status(stat);
-      timer = 0;  /* reseting the standby timer */
+                timer = 0;
+            } else
+                timer++;
+        } else {
+            snprintf(stat, STR, "%s | %s | %c%0.1f%% | %s",
+                    la,
+                    lnk,
+                    status[st],
+                    MIN(bat, 100), dt);
+            set_status(stat);
+            timer = 0;  /* reseting the standby timer */
+        }
     }
-  }
 
 #ifndef DEBUG
-  close_display();
+    close_display();
 #endif
-  return 0; 
+    return 0;
 }
 
-static void
-spawn(const char **params) {
-  if (fork() == 0) {
-    setsid();
-    execv(params[0], (char**)params);
-    exit(0);
-  }
+static void spawn(const char **params) {
+    if (fork() == 0) {
+        setsid();
+        execv(params[0], (char**)params);
+        exit(0);
+    }
 }
 
-static void
-set_status(char *str)
+static void set_status(char *str)
 {
 #ifndef DEBUG
-  XStoreName(dpy, DefaultRootWindow(dpy), str);
-  XSync(dpy, False);
+    XStoreName(dpy, DefaultRootWindow(dpy), str);
+    XSync(dpy, False);
 #else
-  puts(str);
+    puts(str);
 #endif
 }
 
-static void
-open_display(void)
+static void open_display(void)
 {
-  if (!(dpy = XOpenDisplay(NULL))) 
-    exit(1);
-  signal(SIGINT, close_display);
-  signal(SIGTERM, close_display);
+    if (!(dpy = XOpenDisplay(NULL)))
+        exit(1);
+    signal(SIGINT, close_display);
+    signal(SIGTERM, close_display);
 }
 
-static void
-close_display()
+static void close_display()
 {
-  XCloseDisplay(dpy);
-  exit(0);
+    XCloseDisplay(dpy);
+    exit(0);
 }
 
-static void
-get_datetime(char *buf)
+static void get_datetime(char *buf)
 {
-  time_t rawtime;
-  time(&rawtime);
-  snprintf(buf, DTBUF, "%s", ctime(&rawtime));
+    time_t rawtime;
+    time(&rawtime);
+    snprintf(buf, DTBUF, "%s", ctime(&rawtime));
 }
 
-static status_t
-get_status()
+static status_t get_status()
 {
-  FILE *bs;
-  char st;
+    FILE *bs;
+    char st;
 
-  if ((bs = fopen(BAT_STAT, "r")) == NULL)
-    return U;
+    if ((bs = fopen(BAT_STAT, "r")) == NULL) {
+        return U;
+    }
 
-  st = fgetc(bs);
-  fclose(bs);
+    st = fgetc(bs);
+    fclose(bs);
 
-  switch(tolower(st)) {
+    switch(tolower(st)) {
     case 'c': return C;     /* Charging */
     case 'd': return D;     /* Discharging */
     case 'i':               /* Idle - fall through */
     case 'f': return F;     /* Full */
     default : return U;     /* Unknown */
-  }
+    }
 }
 
-static int
-read_int(const char *path)
+static int read_int(const char *path)
 {
-  int i = 0;
-  FILE *fh;
+    int i = 0;
+    FILE *fh;
 
-  if (!(fh = fopen(path, "r")))
-    return -1;
+    if (!(fh = fopen(path, "r")))
+        return -1;
 
-  fscanf(fh, "%d", &i);
-  fclose(fh);
-  return i;
+    fscanf(fh, "%d", &i);
+    fclose(fh);
+    return i;
 }
 
-static void
-read_str(const char *path, char *buf, size_t sz)
+static void read_str(const char *path, char *buf, size_t sz)
 {
-  FILE *fh;
-  char ch = 0;
-  int idx = 0;
+    FILE *fh;
+    char ch = 0;
+    int idx = 0;
 
-  if (!(fh = fopen(path, "r"))) return;
+    if (!(fh = fopen(path, "r"))) return;
 
-  while ((ch = fgetc(fh)) != EOF &&
-         ch != '\0' &&
-         ch != '\n' &&
-         idx < sz) {
-    buf[idx++] = ch;
-  }
+    while ((ch = fgetc(fh)) != EOF &&
+            ch != '\0' && ch != '\n' &&
+            idx < sz) {
+        buf[idx++] = ch;
+    }
 
-  buf[idx] = '\0';
-  fclose(fh);
+    buf[idx] = '\0';
+    fclose(fh);
 }
 
-/* vim: ts=4 sts=8 sw=4 smarttab et si tw=80 ci cino+=t0(0:0 fo=crtocl list */
-
+/* vim: ts=4 sts=8 sw=4 smarttab et si tw=80 ci cino+=t0:0l1(0Ws fo=crtocl */
