@@ -12,7 +12,7 @@
 #include <ctype.h>
 #include <X11/Xlib.h>
 
-/* version 0.66 */
+/* version 0.7 */
 
 #define MIN(a, b) ((a) > (b) ? (b) : (a))
 
@@ -20,9 +20,10 @@
 #define TIMEOUT   40
 #define SUSPEND   { "/bin/sh", "/usr/local/bin/suspend.sh", NULL }
 
+#define INTBUF    64
 #define LABUF     14
 #define DTBUF     20
-#define LNKBUF    8
+#define LNKBUF    64
 #define STR       64
 
 /* Available statuses
@@ -37,11 +38,11 @@ typedef enum {
 } status_t;
 
 
-static void spawn(const char **params)  __attribute__ ((unused));
-static void set_status(char *str);
 static void open_display(void)          __attribute__ ((unused));
 static void close_display()             __attribute__ ((unused));
-static void get_datetime(char *buf);
+static void spawn(const char **params)  __attribute__ ((unused));
+static void set_status(char *str);
+static void get_datetime(char *dstbuf);
 static status_t get_status();
 static int read_int(const char *path);
 static void read_str(const char *path, char *buf, size_t sz);
@@ -69,13 +70,13 @@ int main(void)
         read_str(LNK_PATH, lnk, LNKBUF);        /* link status */
         get_datetime(dt);                       /* date/time */
         bat = ((float)read_int(BAT_NOW) /
-                read_int(BAT_FULL)) * 100.0f;    /* battery */
+               read_int(BAT_FULL)) * 100.0f;    /* battery */
         /* battery status (charging/discharging/full/etc) */
         st = get_status();
 
         if (st == D && bat < THRESHOLD) {
             snprintf(stat, STR, "LOW BATTERY: suspending after %d ",
-                    TIMEOUT - timer);
+                     TIMEOUT - timer);
             set_status(stat);
             if (timer >= TIMEOUT) {
 #ifndef DEBUG
@@ -88,10 +89,10 @@ int main(void)
                 timer++;
         } else {
             snprintf(stat, STR, "%s | %s | %c%0.1f%% | %s",
-                    la,
-                    lnk,
-                    status[st],
-                    MIN(bat, 100), dt);
+                     la,
+                     lnk,
+                     status[st],
+                     MIN(bat, 100), dt);
             set_status(stat);
             timer = 0;  /* reseting the standby timer */
         }
@@ -101,6 +102,20 @@ int main(void)
     close_display();
 #endif
     return 0;
+}
+
+static void open_display(void)
+{
+    if (!(dpy = XOpenDisplay(NULL)))
+        exit(1);
+    signal(SIGINT, close_display);
+    signal(SIGTERM, close_display);
+}
+
+static void close_display()
+{
+    XCloseDisplay(dpy);
+    exit(0);
 }
 
 static void spawn(const char **params) {
@@ -121,25 +136,11 @@ static void set_status(char *str)
 #endif
 }
 
-static void open_display(void)
-{
-    if (!(dpy = XOpenDisplay(NULL)))
-        exit(1);
-    signal(SIGINT, close_display);
-    signal(SIGTERM, close_display);
-}
-
-static void close_display()
-{
-    XCloseDisplay(dpy);
-    exit(0);
-}
-
-static void get_datetime(char *buf)
+static void get_datetime(char *dstbuf)
 {
     time_t rawtime;
     time(&rawtime);
-    snprintf(buf, DTBUF, "%s", ctime(&rawtime));
+    snprintf(dstbuf, DTBUF, "%s", ctime(&rawtime));
 }
 
 static status_t get_status()
@@ -155,24 +156,21 @@ static status_t get_status()
     fclose(bs);
 
     switch(tolower(st)) {
-    case 'c': return C;     /* Charging */
-    case 'd': return D;     /* Discharging */
-    case 'i':               /* Idle - fall through */
-    case 'f': return F;     /* Full */
-    default : return U;     /* Unknown */
+        case 'c': return C;     /* Charging */
+        case 'd': return D;     /* Discharging */
+        case 'i':               /* Idle - fall through */
+        case 'f': return F;     /* Full */
+        default : return U;     /* Unknown */
     }
 }
 
 static int read_int(const char *path)
 {
     int i = 0;
-    FILE *fh;
+    char buf[INTBUF] = { 0 };
 
-    if (!(fh = fopen(path, "r")))
-        return -1;
-
-    fscanf(fh, "%d", &i);
-    fclose(fh);
+    read_str(path, buf, INTBUF);
+    i = atoi(buf);
     return i;
 }
 
@@ -194,4 +192,4 @@ static void read_str(const char *path, char *buf, size_t sz)
     fclose(fh);
 }
 
-/* vim: ts=4 sts=8 sw=4 smarttab et si tw=80 ci cino+=t0:0l1(0Ws fo=crtocl */
+/* vim: set ts=4 sts=8 sw=4 smarttab et si tw=80 cino=t0l1(0k2s fo=crtocl */

@@ -10,7 +10,7 @@ else
 endif
 
 CFLAGS = -Wall
-LFLAGS = -lX11
+LFLAGS =
 INSTALL = install
 INSTALL_ARGS = -o root -g root -m 755
 INSTALL_DIR = /usr/local/bin/
@@ -21,7 +21,6 @@ endif
 
 # autoconfiguration
 BATPATH=`find /sys -name BAT0 -print0 -quit`
-#LNKPATH=`find /sys -name link -print0 -quit`
 LNKPATH=`find /sys/class/net/wlan0/ -name operstate -print0 -quit`
 LAPATH=`find /proc -name loadavg -print0 -quit`
 
@@ -31,8 +30,8 @@ debug: CFLAGS += -g -DDEBUG
 debug: LFLAGS += -g
 debug: build
 
-release: CFLAGS += -Os
-release: LFLAGS += -s
+release: CFLAGS += -O3
+release: LFLAGS += -lX11
 release: clean build
 
 build: build_host.h ${TARGET}
@@ -53,13 +52,13 @@ install: release
 	@echo "DONE"
 
 ${TARGET}: build_host.h ${OBJ}
-	${CC} ${LFLAGS} -o $@ ${OBJ}	
+	${CC} ${LFLAGS} -o $@ ${OBJ}
 
-%.o : %.c
+%.o: %.c
 	${CC} ${CFLAGS} -c $?
 
 clean:
-	-rm -f build_host.h 
-	-rm -f *.o ${TARGET} 
+	-rm -f build_host.h
+	-rm -f *.o ${TARGET}
 
-.PHONY : all debug release build install clean 
+.PHONY: all debug release build install clean
