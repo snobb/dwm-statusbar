@@ -12,8 +12,6 @@
 #include <ctype.h>
 #include <X11/Xlib.h>
 
-/* version 0.7 */
-
 #define MIN(a, b) ((a) > (b) ? (b) : (a))
 
 #define THRESHOLD 8
@@ -49,7 +47,7 @@ static void read_str(const char *path, char *buf, size_t sz);
 
 static Display *dpy;
 
-int main(void)
+int main(int argc, char **argv)
 {
     int   timer = 0;
     float bat;                /* battery status */
@@ -60,6 +58,16 @@ int main(void)
     status_t st;              /* battery status */
     /* should be the same order as the enum above (C, D, U, F) */
     char  status[] = { '+', '-', '?', '=' };
+
+    if (argc > 1 && strcmp(argv[1], "-v") == 0) {
+        printf("dwm-statusbar v%s"
+#ifdef DEBUG
+               " (debug)"
+#endif
+               " [%s %s]\n\nUsage: %s [-v]\n\n",
+                BUILD_VERSION, BUILD_OS, BUILD_KERNEL, argv[0]);
+        exit(0);
+    }
 
 #ifndef DEBUG
     open_display();

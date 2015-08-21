@@ -9,6 +9,14 @@ else
      CC = gcc
 endif
 
+REVCNT = $(shell git rev-list --count master 2>/dev/null)
+REVHASH = $(shell git log -1 --format="%h" 2>/dev/null)
+ifeq (${REVCNT},)
+	VERSION = devel
+else
+	VERSION = "${REVCNT}.${REVHASH}"
+endif
+
 CFLAGS = -Wall
 LFLAGS =
 INSTALL = install
@@ -37,15 +45,16 @@ release: clean build
 build: build_host.h ${TARGET}
 
 build_host.h:
-	@echo "#define BUILD_HOST \"`hostname`\""  > build_host.h
-	@echo "#define BUILD_OS \"`uname`\""          >> build_host.h
-	@echo "#define BUILD_PLATFORM \"`uname -m`\"" >> build_host.h
-	@echo "#define BUILD_KERNEL \"`uname -r`\""   >> build_host.h
-	@echo "#define LA_PATH \"${LAPATH}\""  >> build_host.h
-	@echo "#define BAT_NOW \"${BATPATH}/charge_now\""  >> build_host.h
+	@echo "#define BUILD_HOST \"`hostname`\""             > build_host.h
+	@echo "#define BUILD_OS \"`uname`\""                 >> build_host.h
+	@echo "#define BUILD_PLATFORM \"`uname -m`\""        >> build_host.h
+	@echo "#define BUILD_KERNEL \"`uname -r`\""          >> build_host.h
+	@echo "#define BUILD_VERSION \"${VERSION}\""         >> build_host.h
+	@echo "#define LA_PATH \"${LAPATH}\""                >> build_host.h
+	@echo "#define BAT_NOW \"${BATPATH}/charge_now\""    >> build_host.h
 	@echo "#define BAT_FULL \"${BATPATH}/charge_full\""  >> build_host.h
-	@echo "#define BAT_STAT \"${BATPATH}/status\""  >> build_host.h
-	@echo "#define LNK_PATH \"${LNKPATH}\"" >> build_host.h
+	@echo "#define BAT_STAT \"${BATPATH}/status\""       >> build_host.h
+	@echo "#define LNK_PATH \"${LNKPATH}\""              >> build_host.h
 
 install: release
 	${INSTALL} ${INSTALL_ARGS} ${TARGET} ${INSTALL_DIR}
