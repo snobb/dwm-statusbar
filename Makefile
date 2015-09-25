@@ -30,7 +30,6 @@ endif
 # autoconfiguration
 BATPATH=`find /sys -name BAT0 -print0 -quit`
 LNKPATH=`find /sys/class/net/wlan0/ -name operstate -print0 -quit`
-LAPATH=`find /proc -name loadavg -print0 -quit`
 
 all: debug
 
@@ -50,7 +49,6 @@ build_host.h:
 	@echo "#define BUILD_PLATFORM \"`uname -m`\""        >> build_host.h
 	@echo "#define BUILD_KERNEL \"`uname -r`\""          >> build_host.h
 	@echo "#define BUILD_VERSION \"${VERSION}\""         >> build_host.h
-	@echo "#define LA_PATH \"${LAPATH}\""                >> build_host.h
 	@echo "#define BAT_NOW \"${BATPATH}/charge_now\""    >> build_host.h
 	@echo "#define BAT_FULL \"${BATPATH}/charge_full\""  >> build_host.h
 	@echo "#define BAT_STAT \"${BATPATH}/status\""       >> build_host.h
