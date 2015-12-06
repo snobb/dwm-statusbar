@@ -59,7 +59,7 @@ install: release
 	@echo "DONE"
 
 ${TARGET}: build_host.h ${OBJ}
-	${CC} ${LFLAGS} -o $@ ${OBJ}
+	${CC} -o $@ ${OBJ} ${LFLAGS}
 
 %.o: %.c
 	${CC} ${CFLAGS} -c $?
