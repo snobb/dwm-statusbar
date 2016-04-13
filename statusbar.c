@@ -6,6 +6,7 @@
 #include "build_host.h"
 
 #define _BSD_SOURCE
+#define _XOPEN_SOURCE 700
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,6 +16,8 @@
 #include <signal.h>
 #include <ctype.h>
 #include <X11/Xlib.h>
+#include <alsa/asoundlib.h>
+#include <alsa/control.h>
 
 #define MIN(a, b) ((a) > (b) ? (b) : (a))
 
@@ -25,7 +28,7 @@
 #define INTBUFSZ  64
 #define DTBUFSZ   20
 #define LNKBUFSZ  64
-#define STRSZ     64
+#define STRSZ     256
 
 /* Available statuses
  *
@@ -39,21 +42,23 @@ typedef enum {
 } status_t;
 
 
-static void open_display(void)          __attribute__ ((unused));
+static void open_display()              __attribute__ ((unused));
 static void close_display()             __attribute__ ((unused));
 static void spawn(const char **params)  __attribute__ ((unused));
 static void set_status(char *str);
 static void get_datetime(char *dstbuf);
 static void get_load_average(char *dstla);
-static status_t get_status();
+static status_t get_status(void);
 static int read_int(const char *path);
 static void read_str(const char *path, char *buf, size_t sz);
+static int get_vol(void);
 
 static Display *dpy                     __attribute__ ((unused));
 
 int main(int argc, char **argv)
 {
     int   timer = 0;
+    int   vol = 0;
     float bat;                  /* battery status */
     char  lnk[STRSZ] = { 0 };   /* wifi link      */
     char  la[STRSZ] = { 0 };    /* load average   */
@@ -78,6 +83,7 @@ int main(int argc, char **argv)
 #endif
 
     while (!sleep(1)) {
+        vol = get_vol();
         get_load_average(la);
         read_str(LNK_PATH, lnk, LNKBUFSZ);      /* link status */
         get_datetime(dt);                       /* date/time */
@@ -100,8 +106,9 @@ int main(int argc, char **argv)
             } else
                 timer++;
         } else {
-            snprintf(stat, STRSZ, "%s | %s | %c%0.1f%% | %s",
+            snprintf(stat, STRSZ, "%s | %d | %s | %c%0.1f%% | %s",
                      la,
+                     vol,
                      lnk,
                      status[st],
                      MIN(bat, 100), dt);
@@ -116,7 +123,7 @@ int main(int argc, char **argv)
     return 0;
 }
 
-static void open_display(void)
+static void open_display()
 {
 #ifndef DEBUG
     if (!(dpy = XOpenDisplay(NULL)))
@@ -126,7 +133,7 @@ static void open_display(void)
     signal(SIGTERM, close_display);
 }
 
-static void close_display(void)
+static void close_display()
 {
 #ifndef DEBUG
     XCloseDisplay(dpy);
@@ -171,7 +178,7 @@ static void get_datetime(char *dstbuf)
     snprintf(dstbuf, DTBUFSZ, "%s", ctime(&rawtime));
 }
 
-static status_t get_status()
+static status_t get_status(void)
 {
     FILE *bs;
     char st;
@@ -220,4 +227,28 @@ static void read_str(const char *path, char *buf, size_t sz)
     fclose(fh);
 }
 
-/* vim: set ts=4 sts=8 sw=4 smarttab et si tw=80 cino=t0l1(0k2s fo=crtocl */
+static int get_vol(void)
+{
+    long min, max, volume = 0;
+    snd_mixer_t *handle;
+    snd_mixer_selem_id_t *sid;
+    const char *card = "default";
+    const char *selem_name = "Master";
+
+    snd_mixer_open(&handle, 0);
+    snd_mixer_attach(handle, card);
+    snd_mixer_selem_register(handle, NULL, NULL);
+    snd_mixer_load(handle);
+
+    snd_mixer_selem_id_alloca(&sid);
+    snd_mixer_selem_id_set_index(sid, 0);
+    snd_mixer_selem_id_set_name(sid, selem_name);
+    snd_mixer_elem_t* elem = snd_mixer_find_selem(handle, sid);
+
+    snd_mixer_selem_get_playback_volume_range(elem, &min, &max);
+    snd_mixer_selem_get_playback_volume(elem, 0, &volume);
+    snd_mixer_close(handle);
+
+    return ((double)volume / max) * 100;
+}
+

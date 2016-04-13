@@ -17,8 +17,8 @@ else
 	VERSION = "${REVCNT}.${REVHASH}"
 endif
 
-CFLAGS = -Wall
-LFLAGS =
+CFLAGS = -Wall $(shell pkg-config --cflags alsa)
+LFLAGS = $(shell pkg-config --libs alsa)
 INSTALL = install
 INSTALL_ARGS = -o root -g root -m 755
 INSTALL_DIR = /usr/local/bin/
