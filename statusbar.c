@@ -46,6 +46,7 @@ static void open_display()              __attribute__ ((unused));
 static void close_display()             __attribute__ ((unused));
 static void spawn(const char **params)  __attribute__ ((unused));
 static void set_status(char *str);
+static const char *percent_bar(int p);
 static void get_datetime(char *dstbuf);
 static void get_load_average(char *dstla);
 static status_t get_status(void);
@@ -55,7 +56,8 @@ static int get_vol(void);
 
 static Display *dpy                     __attribute__ ((unused));
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
     int   timer = 0;
     int   vol = 0;
@@ -106,12 +108,13 @@ int main(int argc, char **argv)
             } else
                 timer++;
         } else {
-            snprintf(stat, STRSZ, "%s | %d | %s | %c%0.1f%% | %s",
+            snprintf(stat, STRSZ, "%s | vol:%s | %s | %c%0.1f%% | %s",
                      la,
-                     vol,
+                     percent_bar(vol),
                      lnk,
                      status[st],
-                     MIN(bat, 100), dt);
+                     MIN(bat, 100),
+                     dt);
             set_status(stat);
             timer = 0;  /* reseting the standby timer */
         }
@@ -123,7 +126,8 @@ int main(int argc, char **argv)
     return 0;
 }
 
-static void open_display()
+void
+open_display()
 {
 #ifndef DEBUG
     if (!(dpy = XOpenDisplay(NULL)))
@@ -133,7 +137,8 @@ static void open_display()
     signal(SIGTERM, close_display);
 }
 
-static void close_display()
+void
+close_display()
 {
 #ifndef DEBUG
     XCloseDisplay(dpy);
@@ -141,7 +146,8 @@ static void close_display()
     exit(0);
 }
 
-static void spawn(const char **params) {
+void
+spawn(const char **params) {
     if (fork() == 0) {
         setsid();
         execv(params[0], (char**)params);
@@ -149,7 +155,8 @@ static void spawn(const char **params) {
     }
 }
 
-static void set_status(char *str)
+void
+set_status(char *str)
 {
 #ifndef DEBUG
     XStoreName(dpy, DefaultRootWindow(dpy), str);
@@ -159,7 +166,16 @@ static void set_status(char *str)
 #endif
 }
 
-static void get_load_average(char *dstla)
+const char *
+percent_bar(int p) {
+    const char *s[] = {
+        "▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"
+    };
+    return s[(p * 7) / 100];
+}
+
+void
+get_load_average(char *dstla)
 {
     double avgs[3];
 
@@ -171,14 +187,16 @@ static void get_load_average(char *dstla)
     snprintf(dstla, STRSZ, "%.2f %.2f %.2f", avgs[0], avgs[1], avgs[2]);
 }
 
-static void get_datetime(char *dstbuf)
+void
+get_datetime(char *dstbuf)
 {
     time_t rawtime;
     time(&rawtime);
     snprintf(dstbuf, DTBUFSZ, "%s", ctime(&rawtime));
 }
 
-static status_t get_status(void)
+status_t
+get_status(void)
 {
     FILE *bs;
     char st;
@@ -199,7 +217,8 @@ static status_t get_status(void)
     }
 }
 
-static int read_int(const char *path)
+int
+read_int(const char *path)
 {
     int i = 0;
     char buf[INTBUFSZ] = { 0 };
@@ -209,7 +228,8 @@ static int read_int(const char *path)
     return i;
 }
 
-static void read_str(const char *path, char *buf, size_t sz)
+void
+read_str(const char *path, char *buf, size_t sz)
 {
     FILE *fh;
     char ch = 0;
@@ -227,7 +247,8 @@ static void read_str(const char *path, char *buf, size_t sz)
     fclose(fh);
 }
 
-static int get_vol(void)
+int
+get_vol(void)
 {
     long min, max, volume = 0;
     snd_mixer_t *handle;
