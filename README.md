@@ -7,3 +7,4 @@ The default compiler is clang. The program can be built with any sane C compiler
 ```bash
 make CC=gcc
 ```
+**PLEASE NOTE: The makefile needs to be updated if the net.ifnames is enabled (predictable interface names)**

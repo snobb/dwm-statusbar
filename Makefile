@@ -10,6 +10,7 @@ INSTALL_DIR     := /usr/local/bin/
 
 # autoconfiguration
 BATPATH         := $(shell find /sys -name BAT0 -print0 -quit)
+# Please wlan0 to the wlan interface name if predictable if names are enabled.
 LNKPATH         := $(shell find /sys/class/net/wlan0/ -name operstate -print0 -quit)
 
 # version info from git

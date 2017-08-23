@@ -5,7 +5,7 @@
 
 #include "build_host.h"
 
-#define _BSD_SOURCE
+#define _DEFAULT_SOURCE
 #define _XOPEN_SOURCE 700
 
 #include <stdio.h>
