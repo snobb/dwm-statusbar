@@ -15,9 +15,12 @@
 #include <time.h>
 #include <signal.h>
 #include <ctype.h>
-#include <X11/Xlib.h>
 #include <alsa/asoundlib.h>
 #include <alsa/control.h>
+
+#ifndef DEBUG
+#include <X11/Xlib.h>
+#endif
 
 #define MIN(a, b) ((a) > (b) ? (b) : (a))
 
@@ -26,24 +29,24 @@
 #define SUSPEND   { "/bin/sh", "/usr/local/bin/suspend.sh", NULL }
 
 #define INTBUFSZ  64
-#define DTBUFSZ   20
+#define DTBUFSZ   20    /* strip down the year */
 #define LNKBUFSZ  64
 #define STRSZ     256
 
 /* Available statuses
  *
  *  Charging
- *  Discharging
+ *  Draining
  *  Unknown
  *  Full
  */
 typedef enum {
-    C, D, U, F
+    CHARGING, DRAINING, UNKNOWN, FULL
 } status_t;
 
 
-static void open_display()              __attribute__ ((unused));
-static void close_display()             __attribute__ ((unused));
+static void open_display();
+static void close_display();
 static void spawn(const char **params)  __attribute__ ((unused));
 static void set_status(char *str);
 static const char *percent_bar(int p);
@@ -54,7 +57,9 @@ static int read_int(const char *path);
 static void read_str(const char *path, char *buf, size_t sz);
 static int get_vol(void);
 
-static Display *dpy                     __attribute__ ((unused));
+#ifndef DEBUG
+static Display *dpy;
+#endif
 
 int
 main(int argc, char **argv)
@@ -67,7 +72,7 @@ main(int argc, char **argv)
     char  dt[STRSZ] = { 0 };    /* date/time      */
     char  stat[STRSZ] = { 0 };  /* full string    */
     status_t st;                /* battery status */
-    /* should be the same order as the enum above (C, D, U, F) */
+    /* should be the same order as the status_t enum */
     char  status[] = { '+', '-', '?', '=' };
 
     if (argc > 1 && strcmp(argv[1], "-v") == 0) {
@@ -80,9 +85,7 @@ main(int argc, char **argv)
         exit(0);
     }
 
-#ifndef DEBUG
     open_display();
-#endif
 
     while (!sleep(1)) {
         vol = get_vol();
@@ -94,7 +97,7 @@ main(int argc, char **argv)
         /* battery status (charging/discharging/full/etc) */
         st = get_status();
 
-        if (st == D && bat < THRESHOLD) {
+        if (st == DRAINING && bat < THRESHOLD) {
             snprintf(stat, STRSZ, "LOW BATTERY: suspending after %d ",
                      TIMEOUT - timer);
             set_status(stat);
@@ -108,21 +111,15 @@ main(int argc, char **argv)
             } else
                 timer++;
         } else {
-            snprintf(stat, STRSZ, "%s | vol:%s | %s | %c%0.1f%% | %s",
-                     la,
-                     percent_bar(vol),
-                     lnk,
-                     status[st],
-                     MIN(bat, 100),
-                     dt);
+            snprintf(stat, STRSZ, "%s | vol:%s | %s | %c%0.1f%% | %s", la,
+                    percent_bar(vol), lnk, status[st], MIN(bat, 100), dt);
             set_status(stat);
             timer = 0;  /* reseting the standby timer */
         }
     }
 
-#ifndef DEBUG
     close_display();
-#endif
+
     return 0;
 }
 
@@ -202,18 +199,18 @@ get_status(void)
     char st;
 
     if ((bs = fopen(BAT_STAT, "r")) == NULL) {
-        return U;
+        return UNKNOWN;
     }
 
     st = fgetc(bs);
     fclose(bs);
 
     switch(tolower(st)) {
-        case 'c': return C;     /* Charging */
-        case 'd': return D;     /* Discharging */
-        case 'i':               /* Idle - fall through */
-        case 'f': return F;     /* Full */
-        default : return U;     /* Unknown */
+        case 'c': return CHARGING;
+        case 'd': return DRAINING;
+        case 'i': /* Idle - fall through */
+        case 'f': return FULL;
+        default : return UNKNOWN;
     }
 }
 

@@ -22,11 +22,8 @@ else
     VERSION     := "$(REVCNT).$(REVHASH)"
 endif
 
-INCLUDES        := -I/usr/X11R6/include $(shell pkg-config --cflags alsa)
-LIBS            := -L/usr/X11R6/lib -lX11 $(shell pkg-config --libs alsa)
-
-CFLAGS          := -Wall $(INCLUDES)
-LFLAGS          := $(LIBS)
+CFLAGS          := -Wall $(shell pkg-config --cflags alsa)
+LFLAGS          := $(shell pkg-config --libs alsa)
 
 ifeq ($(CC), $(filter $(CC), cc gcc clang))
     CFLAGS      += -std=c99 -pedantic
@@ -34,11 +31,12 @@ endif
 
 all: debug
 
-debug: CFLAGS += -g -ggdb -DDEBUG
-debug: LFLAGS += -g
+debug: CFLAGS   += -g -ggdb -DDEBUG
+debug: LFLAGS   += -g
 debug: build
 
-release: CFLAGS += -O3
+release: CFLAGS += -O3 -I/usr/X11R6/include
+release: LFLAGS += -L/usr/X11R6/lib -lX11
 release: clean build
 
 build: $(BUILD_HOST) $(TARGET)
