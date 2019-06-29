@@ -9,7 +9,7 @@ INSTALL_ARGS    := -o root -g root -m 755
 INSTALL_DIR     := /usr/local/bin/
 
 # autoconfiguration
-BATPATH         := $(shell find /sys -name BAT0 -print0 -quit)
+BATPATH         := $(strip $(shell find /sys -name BAT0 -print0 -quit))
 # Please wlan0 to the wlan interface name if predictable if names are enabled.
 IFNAME          := $(shell iw dev | awk '/Interface/ { print $$2 }' | tr -d '\n')
 LNKPATH         := $(shell find /sys/class/net/$(IFNAME)/ -name operstate -print0 -quit)
@@ -48,10 +48,12 @@ $(BUILD_HOST):
 	@echo "#define BUILD_PLATFORM \"`uname -m`\""        >> $(BUILD_HOST)
 	@echo "#define BUILD_KERNEL \"`uname -r`\""          >> $(BUILD_HOST)
 	@echo "#define BUILD_VERSION \"$(VERSION)\""         >> $(BUILD_HOST)
+	@echo "#define LNK_PATH \"$(LNKPATH)\""              >> $(BUILD_HOST)
+ifdef BATPATH
 	@echo "#define BAT_NOW \"$(BATPATH)/charge_now\""    >> $(BUILD_HOST)
 	@echo "#define BAT_FULL \"$(BATPATH)/charge_full\""  >> $(BUILD_HOST)
 	@echo "#define BAT_STAT \"$(BATPATH)/status\""       >> $(BUILD_HOST)
-	@echo "#define LNK_PATH \"$(LNKPATH)\""              >> $(BUILD_HOST)
+endif
 
 
 $(TARGET): $(BUILD_HOST) $(OBJ)

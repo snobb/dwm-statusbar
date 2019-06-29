@@ -24,10 +24,6 @@
 
 #define MIN(a, b) ((a) > (b) ? (b) : (a))
 
-#define THRESHOLD 8
-#define TIMEOUT   40
-#define SUSPEND   { "/bin/sh", "/usr/local/bin/suspend.sh", NULL }
-
 #define BUFSZ  64
 #define STATUSSZ  255
 
@@ -42,36 +38,47 @@ typedef enum {
     CHARGING, DRAINING, UNKNOWN, FULL
 } battery_t;
 
-
 static void open_display();
 static void close_display();
-static void spawn(const char **params)  __attribute__ ((unused));
 static void set_status(char *str);
 static const char *get_progress(int p);
 static void get_load_average(char *dstla);
 static void get_datetime(char *dstbuf);
-static battery_t get_battery(void);
 static int get_volume(void);
-static int read_int(const char *path);
 static void read_str(const char *path, char *buf, size_t sz);
 
 #ifndef DEBUG
 static Display *dpy;
 #endif
 
+#ifdef BAT_STAT
+/* If battery exists - show the status and enable low battery action */
+const int THRESHOLD = 8;
+const int TIMEOUT = 40;
+const char *SUSPEND[] = { "/bin/sh", "/usr/local/bin/suspend.sh", NULL };
+/* should be the same order as the battery_t enum */
+const char CHARGE[] = { '+', '-', '?', '=' };
+
+static battery_t get_battery(void);
+static int read_int(const char *path);
+static void spawn(const char **params);
+#endif
+
 int
 main(int argc, char **argv)
 {
-    int   timer = 0;
     int   vol = 0;
-    float bat;                  /* battery status */
+
+#ifdef BAT_STAT
+    int   timer = 0;
+    float charge;      /* battery charge */
+    battery_t bstat;   /* battery status */
+#endif
+
     char  lnk[BUFSZ] = { 0 };   /* wifi link      */
     char  la[BUFSZ] = { 0 };    /* load average   */
     char  dt[BUFSZ] = { 0 };    /* date/time      */
     char  stat[BUFSZ] = { 0 };  /* full string    */
-    battery_t st;               /* battery status */
-    /* should be the same order as the battery_t enum */
-    char  status[] = { '+', '-', '?', '=' };
 
     if (argc > 1 && strcmp(argv[1], "-v") == 0) {
         printf("dwm-statusbar v%s"
@@ -90,33 +97,36 @@ main(int argc, char **argv)
         get_load_average(la);
         read_str(LNK_PATH, lnk, BUFSZ);         /* link status */
         get_datetime(dt);                       /* date/time */
-        bat = ((float)read_int(BAT_NOW) /
-               read_int(BAT_FULL)) * 100.0f;    /* battery */
-        /* battery status (charging/discharging/full/etc) */
-        st = get_battery();
 
-        if (st == DRAINING && bat < THRESHOLD) {
+#ifdef BAT_STAT
+        charge = ((float)read_int(BAT_NOW) /
+               read_int(BAT_FULL)) * 100.0f;    /* battery charge percent */
+
+        /* battery status (charging/discharging/full/etc) */
+        bstat = get_battery();
+
+        if (bstat == DRAINING && charge < THRESHOLD) {
             snprintf(stat, STATUSSZ, "LOW BATTERY: suspending after %d ",
                      TIMEOUT - timer);
 
-            set_status(stat);
 
             if (timer >= TIMEOUT) {
-#ifndef DEBUG
-                spawn((const char*[])SUSPEND);
-#else
-                puts("sleeping");
-#endif
+                spawn(SUSPEND);
                 timer = 0;
             } else {
                 timer++;
             }
         } else {
             snprintf(stat, STATUSSZ, "%s | vol:%s | %s | %c%0.1f%% | %s", la,
-                    get_progress(vol), lnk, status[st], MIN(bat, 100), dt);
-            set_status(stat);
+                    get_progress(vol), lnk, CHARGE[bstat], MIN(charge, 100), dt);
             timer = 0;  /* reseting the standby timer */
         }
+#else
+        snprintf(stat, STATUSSZ, "%s | vol:%s | %s | %s", la,
+                get_progress(vol), lnk, dt);
+#endif
+
+        set_status(stat);
     }
 
     close_display();
@@ -142,15 +152,6 @@ close_display()
     XCloseDisplay(dpy);
 #endif
     exit(0);
-}
-
-void
-spawn(const char **params) {
-    if (fork() == 0) {
-        setsid();
-        execv(params[0], (char**)params);
-        exit(0);
-    }
 }
 
 void
@@ -189,30 +190,7 @@ void
 get_datetime(char *dstbuf)
 {
     time_t rawtime = time(NULL);
-    struct tm *p = localtime(&rawtime);
-    strftime(dstbuf, BUFSZ, "%a %b %d %H:%M:%S", p);
-}
-
-battery_t
-get_battery(void)
-{
-    FILE *bs;
-    char st;
-
-    if ((bs = fopen(BAT_STAT, "r")) == NULL) {
-        return UNKNOWN;
-    }
-
-    st = fgetc(bs);
-    fclose(bs);
-
-    switch(tolower(st)) {
-        case 'c': return CHARGING;
-        case 'd': return DRAINING;
-        case 'i': /* Idle - fall through */
-        case 'f': return FULL;
-        default : return UNKNOWN;
-    }
+    strftime(dstbuf, BUFSZ, "%a %b %d %H:%M:%S", localtime(&rawtime));
 }
 
 int
@@ -241,17 +219,6 @@ get_volume(void)
     return ((double)volume / max) * 100;
 }
 
-int
-read_int(const char *path)
-{
-    int i = 0;
-    char buf[BUFSZ] = { 0 };
-
-    read_str(path, buf, BUFSZ);
-    i = atoi(buf);
-    return i;
-}
-
 void
 read_str(const char *path, char *buf, size_t sz)
 {
@@ -270,4 +237,54 @@ read_str(const char *path, char *buf, size_t sz)
     buf[idx] = '\0';
     fclose(fh);
 }
+
+#ifdef BAT_STAT
+
+battery_t
+get_battery(void)
+{
+    FILE *bs;
+    char st;
+
+    if ((bs = fopen(BAT_STAT, "r")) == NULL) {
+        return UNKNOWN;
+    }
+
+    st = fgetc(bs);
+    fclose(bs);
+
+    switch(tolower(st)) {
+        case 'c': return CHARGING;
+        case 'd': return DRAINING;
+        case 'i': /* Idle - fall through */
+        case 'f': return FULL;
+        default : return UNKNOWN;
+    }
+}
+
+int
+read_int(const char *path)
+{
+    int i = 0;
+    char buf[BUFSZ] = { 0 };
+
+    read_str(path, buf, BUFSZ);
+    i = atoi(buf);
+    return i;
+}
+
+void
+spawn(const char **params) {
+#ifndef DEBUG
+    if (fork() == 0) {
+        setsid();
+        execv(params[0], (char**)params);
+        exit(0);
+    }
+#else
+    printf("spawning command %s %s\n", params[0], params[1]);
+#endif
+}
+
+#endif
 
