@@ -10,7 +10,7 @@ INSTALL_DIR     := /usr/local/bin/
 
 # autoconfiguration
 BATPATH         := $(strip $(shell find /sys -name BAT0 -print0 -quit))
-# Please wlan0 to the wlan interface name if predictable if names are enabled.
+# Infer the wifi interface name - please override here if necessary
 IFNAME          := $(shell iw dev | awk '/Interface/ { print $$2 }' | tr -d '\n')
 LNKPATH         := $(shell find /sys/class/net/$(IFNAME)/ -name operstate -print0 -quit)
 
