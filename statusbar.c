@@ -26,6 +26,7 @@
 
 #define BUFSZ  64
 #define STATUSSZ  255
+#define MUTED 0
 
 /* Available statuses
  *
@@ -41,7 +42,7 @@ typedef enum {
 static void open_display();
 static void close_display();
 static void set_status(char *str);
-static const char *get_progress(int p);
+static const char *render_volume(int p);
 static void get_load_average(char *dstla);
 static void get_datetime(char *dstbuf);
 static int get_volume(void);
@@ -118,12 +119,12 @@ main(int argc, char **argv)
             }
         } else {
             snprintf(stat, STATUSSZ, "%s | vol:%s | %s | %c%0.1f%% | %s", la,
-                    get_progress(vol), lnk, CHARGE[bstat], MIN(charge, 100), dt);
+                    render_volume(vol), lnk, CHARGE[bstat], MIN(charge, 100), dt);
             timer = 0;  /* reseting the standby timer */
         }
 #else
         snprintf(stat, STATUSSZ, "%s | vol:%s | %s | %s", la,
-                get_progress(vol), lnk, dt);
+                render_volume(vol), lnk, dt);
 #endif
 
         set_status(stat);
@@ -166,7 +167,11 @@ set_status(char *str)
 }
 
 const char*
-get_progress(int p) {
+render_volume(int p) {
+    if (p < 0) {
+        return "M";
+    }
+
     const char *s[] = {
         "▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"
     };
@@ -197,6 +202,7 @@ int
 get_volume(void)
 {
     long min, max, volume = 0;
+    int status = !MUTED;
     snd_mixer_t *handle;
     snd_mixer_selem_id_t *sid;
     const char *card = "default";
@@ -211,6 +217,11 @@ get_volume(void)
     snd_mixer_selem_id_set_index(sid, 0);
     snd_mixer_selem_id_set_name(sid, selem_name);
     snd_mixer_elem_t* elem = snd_mixer_find_selem(handle, sid);
+
+    snd_mixer_selem_get_playback_switch(elem, SND_MIXER_SCHN_MONO, &status);
+    if (status == MUTED) {
+        return -1;
+    }
 
     snd_mixer_selem_get_playback_volume_range(elem, &min, &max);
     snd_mixer_selem_get_playback_volume(elem, 0, &volume);
@@ -287,4 +298,3 @@ spawn(const char **params) {
 }
 
 #endif
-
