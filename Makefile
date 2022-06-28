@@ -50,8 +50,8 @@ $(BUILD_HOST):
 	@echo "#define BUILD_VERSION \"$(VERSION)\""         >> $(BUILD_HOST)
 	@echo "#define LNK_PATH \"$(LNKPATH)\""              >> $(BUILD_HOST)
 ifdef BATPATH
-	@echo "#define BAT_NOW \"$(BATPATH)/charge_now\""    >> $(BUILD_HOST)
-	@echo "#define BAT_FULL \"$(BATPATH)/charge_full\""  >> $(BUILD_HOST)
+	@echo "#define BAT_NOW \"$(BATPATH)/energy_now\""    >> $(BUILD_HOST)
+	@echo "#define BAT_FULL \"$(BATPATH)/energy_full\""  >> $(BUILD_HOST)
 	@echo "#define BAT_STAT \"$(BATPATH)/status\""       >> $(BUILD_HOST)
 endif
 

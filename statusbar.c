@@ -43,10 +43,10 @@ static void open_display();
 static void close_display();
 static void set_status(char *str);
 static const char *render_volume(int p);
-static void get_load_average(char *dstla);
-static void get_datetime(char *dstbuf);
+static size_t get_load_average(char *dst);
+static size_t get_datetime(char *dst);
 static int get_volume(void);
-static void read_str(const char *path, char *buf, size_t sz);
+static size_t read_str(const char *path, char *buf, size_t sz);
 
 #ifndef DEBUG
 static Display *dpy;
@@ -64,6 +64,10 @@ static battery_t get_battery(void);
 static int read_int(const char *path);
 static void spawn(const char **params);
 #endif
+
+char *scale[] = {
+    "▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"
+};
 
 int
 main(int argc, char **argv)
@@ -118,12 +122,12 @@ main(int argc, char **argv)
                 timer++;
             }
         } else {
-            snprintf(stat, STATUSSZ, "%s | vol:%s | %s | %c%0.1f%% | %s", la,
+            snprintf(stat, STATUSSZ, "%s | vol:%s | link:%s | bat:%c%0.1f%% | %s", la,
                     render_volume(vol), lnk, CHARGE[bstat], MIN(charge, 100), dt);
             timer = 0;  /* reseting the standby timer */
         }
 #else
-        snprintf(stat, STATUSSZ, "%s | vol:%s | %s | %s", la,
+        snprintf(stat, STATUSSZ, "%s | vol:%s | link:%s | %s", la,
                 render_volume(vol), lnk, dt);
 #endif
 
@@ -172,14 +176,11 @@ render_volume(int p) {
         return "M";
     }
 
-    const char *s[] = {
-        "▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"
-    };
-    return s[(p * 7) / 100];
+    return scale[(p * 7) / 100];
 }
 
-void
-get_load_average(char *dstla)
+size_t
+get_load_average(char *dst)
 {
     double avgs[3];
 
@@ -188,14 +189,14 @@ get_load_average(char *dstla)
         exit(1);
     }
 
-    sprintf(dstla, "%.2f %.2f %.2f", avgs[0], avgs[1], avgs[2]);
+    return sprintf(dst, "%.2f %.2f %.2f", avgs[0], avgs[1], avgs[2]);
 }
 
-void
-get_datetime(char *dstbuf)
+size_t
+get_datetime(char *dst)
 {
     time_t rawtime = time(NULL);
-    strftime(dstbuf, BUFSZ, "%a %b %d %H:%M:%S", localtime(&rawtime));
+    return strftime(dst, BUFSZ, "%a %b %d %H:%M:%S", localtime(&rawtime));
 }
 
 int
@@ -230,23 +231,24 @@ get_volume(void)
     return ((double)volume / max) * 100;
 }
 
-void
+size_t
 read_str(const char *path, char *buf, size_t sz)
 {
     FILE *fh;
     char ch = 0;
-    int idx = 0;
+    size_t idx = 0;
 
-    if (!(fh = fopen(path, "r"))) return;
+    if (!(fh = fopen(path, "r"))) return idx;
 
     while ((ch = fgetc(fh)) != EOF &&
-            ch != '\0' && ch != '\n' &&
-            idx < sz) {
+            ch != '\0' && ch != '\n' && idx < sz) {
         buf[idx++] = ch;
     }
 
     buf[idx] = '\0';
     fclose(fh);
+
+    return idx;
 }
 
 #ifdef BAT_STAT
