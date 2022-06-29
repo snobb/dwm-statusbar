@@ -19,7 +19,7 @@
 #include <alsa/control.h>
 
 #ifndef DEBUG
-#include <X11/Xlib.h>
+    #include <X11/Xlib.h>
 #endif
 
 #define MIN(a, b) ((a) > (b) ? (b) : (a))
@@ -49,7 +49,7 @@ static int get_volume(void);
 static size_t read_str(const char *path, char *buf, size_t sz);
 
 #ifndef DEBUG
-static Display *dpy;
+    static Display *dpy;
 #endif
 
 #ifdef BAT_STAT
@@ -69,9 +69,7 @@ char *scale[] = {
     "▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"
 };
 
-int
-main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     int   vol = 0;
 
 #ifdef BAT_STAT
@@ -80,10 +78,10 @@ main(int argc, char **argv)
     battery_t bstat;   /* battery status */
 #endif
 
-    char  lnk[BUFSZ] = { 0 };   /* wifi link      */
-    char  la[BUFSZ] = { 0 };    /* load average   */
-    char  dt[BUFSZ] = { 0 };    /* date/time      */
-    char  stat[BUFSZ] = { 0 };  /* full string    */
+    char  lnk[BUFSZ] = { 0 };      /* wifi link      */
+    char  la[BUFSZ] = { 0 };       /* load average   */
+    char  dt[BUFSZ] = { 0 };       /* date/time      */
+    char  stat[STATUSSZ] = { 0 };  /* full string    */
 
     if (argc > 1 && strcmp(argv[1], "-v") == 0) {
         printf("dwm-statusbar v%s"
@@ -91,7 +89,7 @@ main(int argc, char **argv)
                " (debug)"
 #endif
                " [%s %s]\n\nUsage: %s [-v]\n\n",
-                BUILD_VERSION, BUILD_OS, BUILD_KERNEL, argv[0]);
+               BUILD_VERSION, BUILD_OS, BUILD_KERNEL, argv[0]);
         exit(0);
     }
 
@@ -105,7 +103,7 @@ main(int argc, char **argv)
 
 #ifdef BAT_STAT
         charge = ((float)read_int(BAT_NOW) /
-               read_int(BAT_FULL)) * 100.0f;    /* battery charge percent */
+                  read_int(BAT_FULL)) * 100.0f;    /* battery charge percent */
 
         /* battery status (charging/discharging/full/etc) */
         bstat = get_battery();
@@ -122,13 +120,13 @@ main(int argc, char **argv)
                 timer++;
             }
         } else {
-            snprintf(stat, STATUSSZ, "%s | vol:%s | link:%s | bat:%c%0.1f%% | %s", la,
-                    render_volume(vol), lnk, CHARGE[bstat], MIN(charge, 100), dt);
+            snprintf(stat, STATUSSZ, "%s | vol:%s | wifi:%s | bat:%c%0.1f%% | %s", la,
+                     render_volume(vol), lnk, CHARGE[bstat], MIN(charge, 100), dt);
             timer = 0;  /* reseting the standby timer */
         }
 #else
-        snprintf(stat, STATUSSZ, "%s | vol:%s | link:%s | %s", la,
-                render_volume(vol), lnk, dt);
+        snprintf(stat, STATUSSZ, "%s | vol:%s | wifi:%s | %s", la,
+                 render_volume(vol), lnk, dt);
 #endif
 
         set_status(stat);
@@ -139,29 +137,23 @@ main(int argc, char **argv)
     return 0;
 }
 
-void
-open_display()
-{
+void open_display() {
 #ifndef DEBUG
     if (!(dpy = XOpenDisplay(NULL)))
-        exit(1);
+    { exit(1); }
 #endif
     signal(SIGINT, close_display);
     signal(SIGTERM, close_display);
 }
 
-void
-close_display()
-{
+void close_display() {
 #ifndef DEBUG
     XCloseDisplay(dpy);
 #endif
     exit(0);
 }
 
-void
-set_status(char *str)
-{
+void set_status(char *str) {
 #ifndef DEBUG
     XStoreName(dpy, DefaultRootWindow(dpy), str);
     XSync(dpy, False);
@@ -170,8 +162,7 @@ set_status(char *str)
 #endif
 }
 
-const char*
-render_volume(int p) {
+const char *render_volume(int p) {
     if (p < 0) {
         return "M";
     }
@@ -179,9 +170,7 @@ render_volume(int p) {
     return scale[(p * 7) / 100];
 }
 
-size_t
-get_load_average(char *dst)
-{
+size_t get_load_average(char *dst) {
     double avgs[3];
 
     if (getloadavg(avgs, 3) < 0) {
@@ -192,16 +181,12 @@ get_load_average(char *dst)
     return sprintf(dst, "%.2f %.2f %.2f", avgs[0], avgs[1], avgs[2]);
 }
 
-size_t
-get_datetime(char *dst)
-{
+size_t get_datetime(char *dst) {
     time_t rawtime = time(NULL);
     return strftime(dst, BUFSZ, "%a %b %d %H:%M:%S", localtime(&rawtime));
 }
 
-int
-get_volume(void)
-{
+int get_volume(void) {
     long min, max, volume = 0;
     int status = !MUTED;
     snd_mixer_t *handle;
@@ -217,7 +202,7 @@ get_volume(void)
     snd_mixer_selem_id_alloca(&sid);
     snd_mixer_selem_id_set_index(sid, 0);
     snd_mixer_selem_id_set_name(sid, selem_name);
-    snd_mixer_elem_t* elem = snd_mixer_find_selem(handle, sid);
+    snd_mixer_elem_t *elem = snd_mixer_find_selem(handle, sid);
 
     snd_mixer_selem_get_playback_switch(elem, SND_MIXER_SCHN_MONO, &status);
     if (status == MUTED) {
@@ -231,14 +216,14 @@ get_volume(void)
     return ((double)volume / max) * 100;
 }
 
-size_t
-read_str(const char *path, char *buf, size_t sz)
-{
+size_t read_str(const char *path, char *buf, size_t sz) {
     FILE *fh;
     char ch = 0;
     size_t idx = 0;
 
-    if (!(fh = fopen(path, "r"))) return idx;
+    if (!(fh = fopen(path, "r"))) {
+        return idx;
+    }
 
     while ((ch = fgetc(fh)) != EOF &&
             ch != '\0' && ch != '\n' && idx < sz) {
@@ -253,9 +238,7 @@ read_str(const char *path, char *buf, size_t sz)
 
 #ifdef BAT_STAT
 
-battery_t
-get_battery(void)
-{
+battery_t get_battery(void) {
     FILE *bs;
     char st;
 
@@ -266,7 +249,7 @@ get_battery(void)
     st = fgetc(bs);
     fclose(bs);
 
-    switch(tolower(st)) {
+    switch (tolower(st)) {
         case 'c': return CHARGING;
         case 'd': return DRAINING;
         case 'i': /* Idle - fall through */
@@ -275,9 +258,7 @@ get_battery(void)
     }
 }
 
-int
-read_int(const char *path)
-{
+int read_int(const char *path) {
     int i = 0;
     char buf[BUFSZ] = { 0 };
 
@@ -286,12 +267,11 @@ read_int(const char *path)
     return i;
 }
 
-void
-spawn(const char **params) {
+void spawn(const char **params) {
 #ifndef DEBUG
     if (fork() == 0) {
         setsid();
-        execv(params[0], (char**)params);
+        execv(params[0], (char **)params);
         exit(0);
     }
 #else
