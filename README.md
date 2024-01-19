@@ -1,3 +1,5 @@
+### NOTE: this repo is no longer maintained. I've now switched to a Golang implementation of the same bar so all the new features and bugfixes are implemented there. https://github.com/snobb/dwmstatus
+
 Super simple status bar for DWM (for linux).
 
 Gets autoconfigured during make.
