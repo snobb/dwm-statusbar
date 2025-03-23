@@ -8,15 +8,15 @@
 #define _DEFAULT_SOURCE
 #define _XOPEN_SOURCE 700
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <time.h>
-#include <signal.h>
-#include <ctype.h>
 #include <alsa/asoundlib.h>
 #include <alsa/control.h>
+#include <ctype.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <unistd.h>
 
 #ifndef DEBUG
     #include <X11/Xlib.h>
@@ -24,8 +24,8 @@
 
 #define MIN(a, b) ((a) > (b) ? (b) : (a))
 
-#define BUFSZ  64
-#define STATUSSZ  255
+#define BUFSZ 64
+#define STATUSSZ 255
 #define MUTED 0
 
 /* Available statuses
@@ -35,9 +35,7 @@
  *  Unknown
  *  Full
  */
-typedef enum {
-    CHARGING, DRAINING, UNKNOWN, FULL
-} battery_t;
+typedef enum { CHARGING, DRAINING, UNKNOWN, FULL } battery_t;
 
 static void open_display();
 static void close_display();
@@ -56,32 +54,30 @@ static size_t read_str(const char *path, char *buf, size_t sz);
 /* If battery exists - show the status and enable low battery action */
 const int THRESHOLD = 8;
 const int TIMEOUT = 40;
-const char *SUSPEND[] = { "/bin/sh", "/usr/local/bin/suspend.sh", NULL };
+const char *SUSPEND[] = {"/bin/sh", "/usr/local/bin/suspend.sh", NULL};
 /* should be the same order as the battery_t enum */
-const char CHARGE[] = { '+', '-', '?', '=' };
+const char CHARGE[] = {'+', '-', '?', '='};
 
 static battery_t get_battery(void);
 static int read_int(const char *path);
 static void spawn(const char **params);
 #endif
 
-char *scale[] = {
-    "▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"
-};
+char *scale[] = {"▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"};
 
 int main(int argc, char **argv) {
-    int   vol = 0;
+    int vol = 0;
 
 #ifdef BAT_STAT
-    int   timer = 0;
-    float charge;      /* battery charge */
-    battery_t bstat;   /* battery status */
+    int timer = 0;
+    float charge;    /* battery charge */
+    battery_t bstat; /* battery status */
 #endif
 
-    char  lnk[BUFSZ] = { 0 };      /* wifi link      */
-    char  la[BUFSZ] = { 0 };       /* load average   */
-    char  dt[BUFSZ] = { 0 };       /* date/time      */
-    char  stat[STATUSSZ] = { 0 };  /* full string    */
+    char lnk[BUFSZ] = {0};     /* wifi link      */
+    char la[BUFSZ] = {0};      /* load average   */
+    char dt[BUFSZ] = {0};      /* date/time      */
+    char stat[STATUSSZ] = {0}; /* full string    */
 
     if (argc > 1 && strcmp(argv[1], "-v") == 0) {
         printf("dwm-statusbar v%s"
@@ -98,12 +94,12 @@ int main(int argc, char **argv) {
     while (!sleep(1)) {
         vol = get_volume();
         get_load_average(la);
-        read_str(LNK_PATH, lnk, BUFSZ);         /* link status */
-        get_datetime(dt);                       /* date/time */
+        read_str(LNK_PATH, lnk, BUFSZ); /* link status */
+        get_datetime(dt);               /* date/time */
 
 #ifdef BAT_STAT
-        charge = ((float)read_int(BAT_NOW) /
-                  read_int(BAT_FULL)) * 100.0f;    /* battery charge percent */
+        charge = ((float)read_int(BAT_NOW) / read_int(BAT_FULL)) *
+                 100.0f; /* battery charge percent */
 
         /* battery status (charging/discharging/full/etc) */
         bstat = get_battery();
@@ -111,7 +107,6 @@ int main(int argc, char **argv) {
         if (bstat == DRAINING && charge < THRESHOLD) {
             snprintf(stat, STATUSSZ, "LOW BATTERY: suspending after %d ",
                      TIMEOUT - timer);
-
 
             if (timer >= TIMEOUT) {
                 spawn(SUSPEND);
@@ -122,8 +117,9 @@ int main(int argc, char **argv) {
         } else {
             snprintf(stat, STATUSSZ, "%s | vol:%s | wifi:%s | bat:%c%0.1f%% | %s", la,
                      render_volume(vol), lnk, CHARGE[bstat], MIN(charge, 100), dt);
-            timer = 0;  /* reseting the standby timer */
+            timer = 0; /* reseting the standby timer */
         }
+
 #else
         snprintf(stat, STATUSSZ, "%s | vol:%s | wifi:%s | %s", la,
                  render_volume(vol), lnk, dt);
@@ -139,8 +135,11 @@ int main(int argc, char **argv) {
 
 void open_display() {
 #ifndef DEBUG
-    if (!(dpy = XOpenDisplay(NULL)))
-    { exit(1); }
+
+    if (!(dpy = XOpenDisplay(NULL))) {
+        exit(1);
+    }
+
 #endif
     signal(SIGINT, close_display);
     signal(SIGTERM, close_display);
@@ -205,6 +204,7 @@ int get_volume(void) {
     snd_mixer_elem_t *elem = snd_mixer_find_selem(handle, sid);
 
     snd_mixer_selem_get_playback_switch(elem, SND_MIXER_SCHN_MONO, &status);
+
     if (status == MUTED) {
         return -1;
     }
@@ -225,8 +225,7 @@ size_t read_str(const char *path, char *buf, size_t sz) {
         return idx;
     }
 
-    while ((ch = fgetc(fh)) != EOF &&
-            ch != '\0' && ch != '\n' && idx < sz) {
+    while ((ch = fgetc(fh)) != EOF && ch != '\0' && ch != '\n' && idx < sz) {
         buf[idx++] = ch;
     }
 
@@ -250,30 +249,36 @@ battery_t get_battery(void) {
     fclose(bs);
 
     switch (tolower(st)) {
-        case 'c': return CHARGING;
-        case 'd': return DRAINING;
+        case 'c':
+            return CHARGING;
+
+        case 'd':
+            return DRAINING;
+
         case 'i': /* Idle - fall through */
-        case 'f': return FULL;
-        default : return UNKNOWN;
+        case 'f':
+            return FULL;
+
+        default:
+            return UNKNOWN;
     }
 }
 
 int read_int(const char *path) {
-    int i = 0;
-    char buf[BUFSZ] = { 0 };
-
+    char buf[BUFSZ] = {0};
     read_str(path, buf, BUFSZ);
-    i = atoi(buf);
-    return i;
+    return atoi(buf);
 }
 
 void spawn(const char **params) {
 #ifndef DEBUG
+
     if (fork() == 0) {
         setsid();
         execv(params[0], (char **)params);
         exit(0);
     }
+
 #else
     printf("spawning command %s %s\n", params[0], params[1]);
 #endif

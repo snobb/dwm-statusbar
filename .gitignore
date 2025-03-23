@@ -1,0 +1,3 @@
+*.o
+statusbar
+build_host.h
