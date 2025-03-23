@@ -25,6 +25,7 @@ endif
 
 CFLAGS          := -Wall $(shell pkg-config --cflags alsa)
 LFLAGS          := $(shell pkg-config --libs alsa)
+LFLAGS          += $(shell pkg-config --libs x11)
 
 ifeq ($(CC), $(filter $(CC), cc gcc clang))
     CFLAGS      += -std=c99 -pedantic
@@ -37,7 +38,6 @@ debug: LFLAGS   += -g
 debug: build
 
 release: CFLAGS += -O3 -I/usr/X11R6/include
-release: LFLAGS += -L/usr/X11R6/lib -lX11
 release: clean build
 
 build: $(BUILD_HOST) $(TARGET)
