@@ -121,7 +121,6 @@ int main(int argc, char **argv) {
                      render_volume(vol), lnk, CHARGE[bstat], MIN(charge, 100), dt);
             timer = 0; /* reseting the standby timer */
         }
-
 #else
         snprintf(stat, STATUSSZ, "%s | vol:%s | wifi:%s | %s", la,
                  render_volume(vol), lnk, dt);
@@ -137,11 +136,9 @@ int main(int argc, char **argv) {
 
 void open_display() {
 #ifndef DEBUG
-
     if (!(dpy = XOpenDisplay(NULL))) {
         exit(1);
     }
-
 #endif
     signal(SIGINT, close_display);
     signal(SIGTERM, close_display);
@@ -274,13 +271,11 @@ int read_int(const char *path) {
 
 void spawn(const char **params) {
 #ifndef DEBUG
-
     if (fork() == 0) {
         setsid();
         execv(params[0], (char **)params);
         exit(0);
     }
-
 #else
     printf("spawning command %s %s\n", params[0], params[1]);
 #endif
