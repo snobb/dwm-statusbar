@@ -55,7 +55,6 @@ ifdef BATPATH
 	@echo "#define BAT_STAT \"$(BATPATH)/status\""       >> $(BUILD_HOST)
 endif
 
-
 $(TARGET): $(BUILD_HOST) $(OBJ)
 	$(CC) -o $@ $(OBJ) $(LFLAGS)
 

@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -52,6 +53,7 @@ static size_t read_str(const char *path, char *buf, size_t sz);
 
 #ifdef BAT_STAT
 /* If battery exists - show the status and enable low battery action */
+const bool SUSPEND_ON_LOW_BATTERY = false;
 const int THRESHOLD = 8;
 const int TIMEOUT = 40;
 const char *SUSPEND[] = {"/bin/sh", "/usr/local/bin/suspend.sh", NULL};
@@ -104,7 +106,7 @@ int main(int argc, char **argv) {
         /* battery status (charging/discharging/full/etc) */
         bstat = get_battery();
 
-        if (bstat == DRAINING && charge < THRESHOLD) {
+        if (SUSPEND_ON_LOW_BATTERY && bstat == DRAINING && charge < THRESHOLD) {
             snprintf(stat, STATUSSZ, "LOW BATTERY: suspending after %d ",
                      TIMEOUT - timer);
 
